@@ -13,12 +13,13 @@ Hello! I’m a Machine Learning Engineer excited about solving unique problems w
 
 <img align="right" width="200" height="200" src="penny.png">
 <br>
+<br>
+<br>
+
 <div style="text-align: left">A GPT-3 powered Q&A chatbot finetuned and utilizing semantic search. Able to answer specific questions about an online video game. </div>
 
 [Github Repo](https://github.com/ubitquitin/pennybot)
 
-<br>
-<br>
 <br>
 
  - - - - - - -
