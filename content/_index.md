@@ -13,10 +13,12 @@ Hello! I’m a Machine Learning Engineer excited about solving unique problems w
 
 <img align="right" width="200" height="200" src="penny.png">
 <br>
-<div style="text-align: left">An GPT-3 powered Q&A chatbot finetuned and utilizing semantic search. Able to answer specific questions about Barbarian Assault, a niche activity within an online video game that is far too specific for the vanilla Transformer model to properly address.</div>
+<div style="text-align: left">A GPT-3 powered Q&A chatbot finetuned and utilizing semantic search. Able to answer specific questions about an online video game. </div>
 
 [Github Repo](https://github.com/ubitquitin/pennybot)
 
+<br>
+<br>
 <br>
 
  - - - - - - -
@@ -47,3 +49,45 @@ Hello! I’m a Machine Learning Engineer excited about solving unique problems w
 <br>
 <br>
  - - - - - - -
+ 
+ 
+ ## Reccommendation model ##
+
+**Coming soon.**
+<div style="text-align: left"> Recommendation model deployed to a Sagemaker endpoint. Add monitoring with Databricks and address scalability. Look into Terraform.  </div>
+
+ - - - - - - -
+
+  ## LLM architecture study ##
+
+**Coming soon.**
+<div style="text-align: left"> Use MLFlow to examine the performance of various LLM architectures on a unique problem. Low level granularity. </div>
+
+ - - - - - - -
+
+  ## Online Anomaly detection streaming ##
+
+**Coming soon.**
+<div style="text-align: left"> Anomaly detection model that consumes streamed online data to identify fraudulent activity. (via Spark or Kafka)  </div>
+
+ - - - - - - -
+
+ ## Heartbeat Classification ##
+
+<img align="center" width="500" height="500" src="heartbeat.png">
+
+
+<div style="text-align: center">Comparative analysis of deep learning methodologies to predict heart disease from heartbeat ECG waveforms. LSTM models, transformer networks, timeseries to image encodings, CNN, tiled-CNN, and transfer learning methodologies were explored to maximize accuracy. Generative adversarial networks (GAN) were developed to generate realistic heartbeat samples to augment dataset. </div>
+
+[Presentation](https://docs.google.com/presentation/d/1jgeSdeDLxl9CX1P57JNbuJtp4bThPDfPLt2CidsuxXo/edit?usp=sharing) | 
+[Notebook](https://www.kaggle.com/code/ubitquitin/tsc-exploration)
+
+ - - - - - - -
+
+ ## Bayesian Skin Cancer Classification ##
+
+<img align="left" width="275" height="275" src="gaussian.png">
+<div style="text-align: right">Used a Relevance Vector Machine, Gaussian Process Regression and Bayesian Neural Networks for supervised multiclass classification of skin cancer images. Python Sci-kit Learn and Edward packages used for model construction and validation</div>
+
+[Presentation](https://docs.google.com/presentation/d/1vw80pKNvklOluIgGVs5ZZvF3uOw3nwrHGyds_V8jTdQ/edit?usp=sharing)
+<br>
