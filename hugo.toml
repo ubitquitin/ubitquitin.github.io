@@ -1,0 +1,24 @@
+theme = "lynx"
+title = "Rohan Khopkar"
+languageCode = "en-au"
+baseUrl = "https://ubitquitin.github.io"
+
+enableEmoji = true
+disableKinds = ["taxonomy", "term"]
+
+[author]
+  image = "slime.jpg"
+  links = [
+    { github = "https://github.com/ubitquitin" },
+    { linkedin = "https://www.linkedin.com/in/rohan-khopkar-207351ab/" },
+    { kaggle = "https://www.kaggle.com/ubitquitin" },
+  ]
+  alternative = "Rohan Khopkar | Machine Learning Engineer"
+  
+
+[markup.highlight]
+  noClasses = false
+
+[markup.goldmark]
+[markup.goldmark.renderer]
+  unsafe = true
