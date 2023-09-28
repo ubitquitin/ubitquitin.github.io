@@ -1,6 +1,6 @@
 ---
 title: "Rohan Khopkar"
-description: "Hello! I’m a Machine Learning Engineer excited about solving unique problems with data driven solutions. I currently live near Chicago, IL in the United States, and work for Capital One Software."
+description: "Hello! I’m a Machine Learning Engineer excited about solving unique problems with data driven solutions."
 ---
 
 Hello! I’m a Machine Learning Engineer excited about solving unique problems with data driven solutions. I currently live near Chicago, IL in the United States, and work for Capital One Software.
