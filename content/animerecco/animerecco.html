@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Titanic Survival</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js">
+    </script>
+    <script src="/projects/animerecco/animerecco-script.js"></script>
+</head>
+
+<body>
+
+<h2>Rohan's Anime Recommendations</h2>
+
+<form class="form">
+  <label for="name">Anime name:</label><br>
+  <input type="text" id="name" name="name" value="Hayate no Gotoku!"><br>
+  <label for="n">Number of suggestions (max 10):</label><br>
+  <input type="text" id="n" name="n" value="5"><br><br>
+  <button type="submit">Submit</button>
+</form> 
+<script>
+  const formEl = document.querySelector('.form')
+
+  formEl.addEventListener('submit', event => {
+    document.getElementById("p2").innerHTML = 'Processing...';
+    event.preventDefault();
+    console.log('entering')
+    const formData = new FormData(formEl);
+    const data = Object.fromEntries(formData);
+
+    fetch('https://b3loea5ia3.execute-api.us-east-1.amazonaws.com/main', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    }).then(res => res.json())
+      .then(data => {
+          console.log(data);
+          document.getElementById("container").innerHTML = data;
+          document.getElementById("p2").innerHTML = 'Done!';
+          if (data == null) {
+            document.getElementById("p2").innerHTML = 'Anime not found :(';
+          }
+          return data;
+        })
+      .catch(error => {
+        console.log(error);
+        document.getElementById("p2").innerHTML = error;
+        return data;
+      })
+  })
+</script>
+
+</body>
+
+<p id="p2"></p>
+<div id="container"></div>
+
+
+</html>

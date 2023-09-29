@@ -3,7 +3,7 @@ title: "Rohan Khopkar"
 description: "Hello! I’m a Machine Learning Engineer excited about solving unique problems with data driven solutions."
 ---
 
-Hello! I’m a Machine Learning Engineer excited about solving unique problems with data driven solutions. I currently live near Chicago, IL in the United States, and work for Capital One Software.
+Hello! I’m a Machine Learning Engineer excited about solving unique problems with data driven solutions.
 
  - - - -
 # Projects: #
@@ -54,9 +54,12 @@ Hello! I’m a Machine Learning Engineer excited about solving unique problems w
  
  ## Reccommendation model ##
 
-**Coming soon.**
-<div style="text-align: left"> Recommendation model deployed to a Sagemaker endpoint. Add monitoring with Databricks and address scalability. Look into Terraform.  </div>
+<img align="left" width="400" height="400" src="animerecsimage.PNG">
 
+**Work in Progress...**
+<div style="text-align: right"> Anime recommendation service that returns top n most similar shows to the user's queried show. Neural Collaborative Filtering was implemented and embeddings deployed onto a RESTful endpoint. Serverless framework was used to spin up API Gateway + Lambda stack using infrastructure as code development. Todo: deploy addional endpoints that utilize LLM embeddings and compare a user based recommendation approach with a text similarity one.   </div>
+
+[Try it out]({{< ref "animerecco/animerecco.md" >}}) | [Github Repo](https://github.com/ubitquitin/mal_reccos)
  - - - - - - -
 
   ## LLM architecture study ##
