@@ -1,0 +1,19 @@
+# config/_default/config.toml
+
+baseURL = "https://your_domain.com/"
+languageCode = "en"
+
+title = ""
+
+[author]
+name = "Rohan Khopkar"
+image = "slime.jpg"
+headline = ""
+bio = ""
+links = [
+    { github = "https://github.com/ubitquitin" },
+    { linkedin = "https://www.linkedin.com/in/rohan-khopkar-207351ab/" },
+    { kaggle = "https://www.kaggle.com/ubitquitin" },
+  ]
+
+colorScheme = "blowfish"
