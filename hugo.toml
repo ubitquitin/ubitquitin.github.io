@@ -11,7 +11,7 @@ disableKinds = ["taxonomy", "term"]
   links = [
     { github = "https://github.com/ubitquitin" },
     { linkedin = "https://www.linkedin.com/in/rohan-khopkar-207351ab/" },
-    { kaggle = "https://www.kaggle.com/ubitquitin", text = "kaggle" },
+    { kaggle = "https://www.kaggle.com/ubitquitin" },
   ]
   alternative = "Rohan Khopkar | Machine Learning Engineer"
   
