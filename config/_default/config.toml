@@ -1,6 +1,6 @@
 # config/_default/config.toml
 
-baseURL = "https://your_domain.com/"
+baseURL = "https://ubitquitin.github.io/"
 languageCode = "en"
 
 title = ""
