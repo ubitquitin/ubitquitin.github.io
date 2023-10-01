@@ -57,11 +57,11 @@ Hello! I’m a Machine Learning Engineer excited about solving unique problems w
  - - - - - - -
  
  
- ## Reccommendation model ##
+ ## Recommendation model ##
 
 <img align="right" width="300" height="300" src="animerecsimage.PNG">
 
-<div style="text-align: center"> Anime recommendation service that returns top n most similar shows to the user's queried show. Neural Collaborative Filtering was implemented and embeddings deployed onto a RESTful endpoint. Serverless framework was used to spin up API Gateway + Lambda stack using infrastructure as code development. Todo: deploy addional endpoints that utilize LLM embeddings and compare a user based recommendation approach with a text similarity one.   </div>
+<div style="text-align: center"> Anime recommendation service that returns top n most similar shows to the user's queried show. Neural Collaborative Filtering was implemented and embeddings deployed onto a RESTful endpoint. Serverless framework was used to spin up API Gateway + Lambda stack using infrastructure as code development. Todo: deploy additional endpoints that utilize LLM embeddings and compare a user based recommendation approach with a text similarity one.   </div>
 
 [Try it out]({{< ref "animerecco/animerecco.md" >}}) | [Github Repo](https://github.com/ubitquitin/mal_reccos)
  - - - - - - -
@@ -69,7 +69,7 @@ Hello! I’m a Machine Learning Engineer excited about solving unique problems w
   ## LLM architecture study ##
 
 **Coming soon.**
-<div style="text-align: left"> Use MLFlow to examine the performance of various LLM architectures on a unique problem. Low level granularity. </div>
+<div style="text-align: left"> Use MLFlow to examine the performance of various LLM architectures on a unique problem. High level granularity. </div>
 
  - - - - - - -
 
