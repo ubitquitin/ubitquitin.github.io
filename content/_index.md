@@ -32,11 +32,11 @@ Hello! I’m a Machine Learning Engineer excited about solving unique problems w
 ## DeepGeoWorld ##
 *What country is this image from?*
 
-<img align="left" width="275" height="275" src="geoworld.png">
-<br>
-<div style="text-align: right">Geolocation/Image Classification using a Convolutional Neural Network (CNN) built with PyTorch. A PyTorch custom dataset was built via web-scraping with Python Beautifulsoup and Geopy libraries. Explored activation maps for AI explainability.</div>
+<img align="center" width="500" height="500" src="gradcam.PNG">
+<div style="text-align: center">Geolocation/Image Classification using a Convolutional Neural Network (CNN) built with PyTorch. A PyTorch custom dataset was built via web-scraping with Python Beautifulsoup and Geopy libraries. Explored activation maps for AI explainability.</div>
 
-[Github Repo](https://github.com/ubitquitin/DeepGeoWorld)
+[Github Repo](https://github.com/ubitquitin/DeepGeoWorld) | 
+[Notebook](https://www.kaggle.com/code/ubitquitin/this-is-america-deep-geolocation)
 <br>
 
  - - - - - - -
