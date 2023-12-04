@@ -67,19 +67,6 @@ Hello! I’m a Machine Learning Engineer excited about solving unique problems w
 
 
 [Try it out]({{< ref "animerecco/animerecco.md" >}}) | [Github Repo](https://github.com/ubitquitin/mal_reccos)
- - - - - - - -
-
-  ## LLM architecture study ##
-
-**Coming soon.**
-<div style="text-align: left"> Use MLFlow to examine the performance of various LLM architectures on a unique problem. High level granularity. </div>
-
- - - - - - - -
-
-  ## Online Anomaly detection streaming ##
-
-**Coming soon.**
-<div style="text-align: left"> Anomaly detection model that consumes streamed online data to identify fraudulent activity. (via Spark or Kafka)  </div>
 
  - - - - - - -
 
@@ -101,4 +88,19 @@ Hello! I’m a Machine Learning Engineer excited about solving unique problems w
 <div style="text-align: right">Used a Relevance Vector Machine, Gaussian Process Regression and Bayesian Neural Networks for supervised multiclass classification of skin cancer images. Python Sci-kit Learn and Edward packages used for model construction and validation</div>
 
 [Presentation](https://docs.google.com/presentation/d/1vw80pKNvklOluIgGVs5ZZvF3uOw3nwrHGyds_V8jTdQ/edit?usp=sharing)
+
+ - - - - - - -
+
+  ## LLM architecture study ##
+
+**Coming soon.**
+<div style="text-align: left"> Use MLFlow to examine the performance of various LLM architectures on a unique problem. High level granularity. </div>
+
+ - - - - - - -
+
+  ## Online Anomaly detection streaming ##
+
+**Coming soon.**
+<div style="text-align: left"> Anomaly detection model that consumes streamed online data to identify fraudulent activity. (via Spark or Kafka)  </div>
+
 <br>
