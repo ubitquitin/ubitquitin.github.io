@@ -21,7 +21,7 @@ Hello! I’m a Machine Learning Engineer excited about solving unique problems w
 <br>
 <br>
 
-<div style="text-align: left">A GPT-3 powered Q&A chatbot finetuned and utilizing semantic search. Able to answer specific questions about an online video game. </div>
+<div style="text-align: left">A GPT-3 powered Q&A chatbot finetuned and utilizing retrival augmented generation (RAG) & semantic search. Able to answer specific questions about an online video game. </div>
 
 [Github Repo](https://github.com/ubitquitin/pennybot)
 
