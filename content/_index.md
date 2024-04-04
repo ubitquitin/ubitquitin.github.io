@@ -13,11 +13,10 @@ Hello! I’m a Machine Learning Engineer excited about solving unique problems w
  - - - -
 # Projects: #
 
-## dRAG 🐲##
+## dRAG 🐲 ##
 *A chatbot that knows about your specific database!*
 
 <img align="right" width="350" height="350" src="drag.PNG">
-<br>
 <br>
 <br>
 
