@@ -16,14 +16,14 @@ Hello! I’m a Machine Learning Engineer excited about solving unique problems w
 ## dRAG ##
 *A chatbot that knows about your specific database!*
 
-<img align="right" width="200" height="200" src="drag.PNG">
+<img align="right" width="500" height="500" src="drag.PNG">
 <br>
 <br>
 <br>
 
-<div style="text-align: left">dRAG uses retrieval augmented generation (RAG) to prompt-inject information about your database when generating responses to your questions! When you connect to a Snowflake or Databricks Schema using dRAG, it runs a few metadata level queries (low/no cost) and dynamically generates a corpus of information about the schema structure.
+<div style="text-align: left">dRAG dynamically generates a corpus about your Snowflake/Databrickcs schema and uses retrieval augmented generation (RAG) to answer specific questions about your data.
 
-You can then ask dRAG specific questions about your database, and the tables and columns that reside in it! Additionally, dRAG is capable of answering analyst questions using text2sql technology! dRAG will convert your question into a SQL statement and run the SQL statement in your data warehouse to find the answer for you. </div>
+Additionally, dRAG can convert your question into a SQL statement and run the SQL statement in your data warehouse to find the answer for you. </div>
 
 [Github Repo](https://github.com/ubitquitin/dbrag/tree/main) | [Try it out](https://datarag.streamlit.app/)
 
