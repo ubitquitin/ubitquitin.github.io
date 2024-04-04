@@ -16,7 +16,7 @@ Hello! I’m a Machine Learning Engineer excited about solving unique problems w
 ## dRAG 🐲 ##
 *A chatbot that knows about your specific database!*
 
-<img align="right" width="400" height="400" src="drag.PNG">
+<img align="right" width="450" height="450" src="drag.PNG">
 <br>
 <br>
 
@@ -25,8 +25,6 @@ Hello! I’m a Machine Learning Engineer excited about solving unique problems w
 Additionally, dRAG can convert your question into a SQL statement and run the SQL statement in your data warehouse to find the answer for you. </div>
 
 [Github Repo](https://github.com/ubitquitin/dbrag/tree/main) | [Try it out](https://datarag.streamlit.app/)
-
-<br>
 
  - - - - - - -
 
