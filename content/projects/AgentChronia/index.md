@@ -14,7 +14,7 @@ This is a WORK IN PROGRESS.
 
 {{< video src="clip.mp4" type="video/mp4" preload="auto" autoplay="true">}}
 
-The goal is to build an agent to optimally traverse a 5 minute obstacle course in the online game Runescape. By building an agent that can take the same actions as a player can for moving around a grid based map, the goal is to try and train an agent using proximal policy optimization (PPO) to complete the course in the fastest time. 
+The goal is to build an agent to optimally traverse a ~5 minute obstacle course in the online game Runescape. By building an agent that can take the same actions as a player can for moving around a grid based map, the goal is to try and train an agent using proximal policy optimization (PPO) to complete the course in the fastest time. 
 
 I want to see if the agent can come up with new strategies that the human playerbase did not think about, and if it can even break the current record for fastest course completion. 
 
