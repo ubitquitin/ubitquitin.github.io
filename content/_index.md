@@ -16,9 +16,7 @@ Hello! I’m a Machine Learning Engineer excited about solving unique problems w
 ## dRAG 🐲 ##
 *A chatbot that knows about your specific database!*
 
-<img align="right" width="450" height="450" src="drag.PNG">
-<br>
-<br>
+<img align="center" width="450" height="450" src="drag.PNG">
 
 <div style="text-align: left">dRAG dynamically generates a corpus about your Snowflake/Databrickcs schema and uses retrieval augmented generation (RAG) to answer specific questions about your data.
 
