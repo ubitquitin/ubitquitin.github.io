@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Animereccoes on </title>
+    <link>https://ubitquitin.github.io/animerecco/</link>
+    <description>Recent content in Animereccoes on </description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>© 2024 Rohan Khopkar</copyright>
+    <lastBuildDate>Wed, 27 Sep 2023 10:58:00 -0400</lastBuildDate><atom:link href="https://ubitquitin.github.io/animerecco/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Anime Suggestions</title>
+      <link>https://ubitquitin.github.io/animerecco/animerecco/</link>
+      <pubDate>Wed, 27 Sep 2023 10:58:00 -0400</pubDate>
+      
+      <guid>https://ubitquitin.github.io/animerecco/animerecco/</guid>
+      <description>&lt;!DOCTYPE html&gt;Anime RecsRohan&#39;s Anime RecommendationsFirst request will take a bit longer (~10s) as Lambda warms up.Consecutive requests should be near instantaneous.Anime name:
+Number of suggestions (max 10):
+Embedding Method*:
+NCFLLMSubmit*Embedding method determines the machine learning approach used to generate similar anime.NCF (Neural collaborative filtering) uses the ratings of other anime watchers from a popular anime ranking website.LLM (Large Language Model) uses the text similarity of the anime synopsis.</description>
+      
+    </item>
+    
+  </channel>
+</rss>
