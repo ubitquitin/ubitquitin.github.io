@@ -13,19 +13,35 @@ Hello! I’m a Machine Learning Engineer excited about solving unique problems w
  - - - -
 # Projects: #
 
-## PennyBot ##
-*LLM created BA subject matter expert*
+## dRAG ##
+*A chatbot that knows about your specific database!*
 
-<img align="right" width="200" height="200" src="penny.png">
+<img align="right" width="200" height="200" src="drag.PNG">
 <br>
 <br>
 <br>
 
-<div style="text-align: left">A GPT-3 powered Q&A chatbot finetuned and utilizing retrival augmented generation (RAG) & semantic search. Able to answer specific questions about an online video game. </div>
+<div style="text-align: left">dRAG uses retrieval augmented generation (RAG) to prompt-inject information about your database when generating responses to your questions! When you connect to a Snowflake or Databricks Schema using dRAG, it runs a few metadata level queries (low/no cost) and dynamically generates a corpus of information about the schema structure.
 
-[Github Repo](https://github.com/ubitquitin/pennybot)
+You can then ask dRAG specific questions about your database, and the tables and columns that reside in it! Additionally, dRAG is capable of answering analyst questions using text2sql technology! dRAG will convert your question into a SQL statement and run the SQL statement in your data warehouse to find the answer for you. </div>
+
+[Github Repo](https://github.com/ubitquitin/dbrag/tree/main) | [Try it out](https://datarag.streamlit.app/)
 
 <br>
+
+ - - - - - - -
+
+ 
+ ## Recommendation model ##
+<img align="right" width="350" height="350" src="animerecs.png">
+
+<div style="text-align: left"> Anime recommendation service that returns top n most similar shows to the user's queried show. Neural Collaborative Filtering was implemented and embeddings deployed onto a RESTful endpoint. Serverless framework was used to spin up API Gateway + Lambda stack using infrastructure as code development. Additional endpoint deployed that utilizes LLM embeddings to and compare a user based recommendation approach with a text similarity one.   </div>
+
+
+
+
+
+[Try it out]({{< ref "animerecco/animerecco.md" >}}) | [Github Repo](https://github.com/ubitquitin/mal_reccos)
 
  - - - - - - -
 
@@ -37,6 +53,22 @@ Hello! I’m a Machine Learning Engineer excited about solving unique problems w
 
 [Github Repo](https://github.com/ubitquitin/DeepGeoWorld) | 
 [Notebook](https://www.kaggle.com/code/ubitquitin/this-is-america-deep-geolocation)
+<br>
+
+ - - - - - - -
+
+ ## PennyBot ##
+*LLM created BA subject matter expert*
+
+<img align="right" width="200" height="200" src="penny.png">
+<br>
+<br>
+<br>
+
+<div style="text-align: left">A GPT-3 powered Q&A chatbot finetuned and utilizing retrival augmented generation (RAG) & semantic search. Able to answer specific questions about an online video game. </div>
+
+[Github Repo](https://github.com/ubitquitin/pennybot)
+
 <br>
 
  - - - - - - -
@@ -56,19 +88,6 @@ Hello! I’m a Machine Learning Engineer excited about solving unique problems w
 <br>
  - - - - - - -
  
- 
- ## Recommendation model ##
-<img align="right" width="350" height="350" src="animerecs.png">
-
-<div style="text-align: left"> Anime recommendation service that returns top n most similar shows to the user's queried show. Neural Collaborative Filtering was implemented and embeddings deployed onto a RESTful endpoint. Serverless framework was used to spin up API Gateway + Lambda stack using infrastructure as code development. Additional endpoint deployed that utilizes LLM embeddings to and compare a user based recommendation approach with a text similarity one.   </div>
-
-
-
-
-
-[Try it out]({{< ref "animerecco/animerecco.md" >}}) | [Github Repo](https://github.com/ubitquitin/mal_reccos)
-
- - - - - - - -
 
  ## Heartbeat Classification ##
 
