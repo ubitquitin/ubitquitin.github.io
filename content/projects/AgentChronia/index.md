@@ -11,6 +11,7 @@ showTableOfContents = false
 +++
 
 This is a WORK IN PROGRESS.
+Latest progress video here: https://youtu.be/2S2oA0Il4a4
 
 {{< video src="clip.mp4" type="video/mp4" preload="auto" autoplay="true">}}
 
