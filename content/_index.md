@@ -16,7 +16,7 @@ Hello! I’m a Machine Learning Engineer excited about solving unique problems w
 ## dRAG 🐲 ##
 *A chatbot that knows about your specific database!*
 
-<img align="right" width="350" height="350" src="drag.PNG">
+<img align="right" width="400" height="400" src="drag.PNG">
 <br>
 <br>
 
