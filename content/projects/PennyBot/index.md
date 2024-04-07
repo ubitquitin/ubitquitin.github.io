@@ -2,7 +2,7 @@
 title = 'PennyBot'
 summary = 'Subject matter expert chatbot created using LLMs & RAG. Deployed to private Discord servers using Replit.'
 languageCode = 'en-us'
-date = 2023-08-23
+date = 2023-12-23
 draft = false
 tags = ['notes', 'reflections']
 showRecent = true

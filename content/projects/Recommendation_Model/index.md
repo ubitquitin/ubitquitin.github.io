@@ -1,6 +1,6 @@
 +++
 title = 'Anime Recommendations Model'
-summary = 'Collaborative Filtering vs LLM based recommendations. Deployed with serverless AWS stack.'
+summary = 'Collaborative Filtering vs LLM based recommendations. Deployed using infrastructure-as-code serverless AWS stack.'
 languageCode = 'en-us'
 date = 2023-12-21
 draft = false

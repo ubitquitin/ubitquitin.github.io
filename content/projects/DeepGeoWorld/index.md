@@ -3,7 +3,7 @@
 title = 'DeepGeoWorld'
 summary = 'Deep Learning for GeoLocation. Using CNN/Computer Vision & custom Pytorch datasets. GradCAM for model explainability.'
 languageCode = 'en-us'
-date = 2023-09-17
+date = 2024-01-17
 draft = false
 tags = ['notes', 'reflections']
 showRecent = true
