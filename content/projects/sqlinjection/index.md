@@ -147,21 +147,26 @@ Although there is some overlap, we can see that the two datasets are distinctly 
 Additionally, I further reduced the dimensionality down to just 1 tSNE component. This was the result of plotting the distributions of both datasets. 
 <img width="500" height="500" src="kde.png">
 
-We can see again, a nice distinction, but let's be a little more mathematically thorough. I compute 3 different metrics of data distribution similarity: KL divergence, Population Stability Index (PSI), and I run a Kolmogorov-Smirnov test for goodness of fit. I will describe each of the methods below, but feel free to skip. 
+We can see again, a nice distinction, but let's be a little more mathematically thorough. I compute 3 different metrics of data distribution similarity: **KL divergence**, **Population Stability Index (PSI)**, and I run a **Kolmogorov-Smirnov test** for goodness of fit. I will describe each of the methods below, but feel free to skip. 
 
-<img width="500" height="500" src="ddmetrics.PNG">
+<img width="1000" height="300" src="ddmetrics.PNG">
 The results for all 3 methods show that there is significant data drift between our two datasets, and that model retraining is necessary to maintain performance.
+
 - - - - - 
+
 *Aside:* 
 
-<img width="200" height="200" src="kld.png">
+<img width="500" height="500" src="kld.png">
+
 > :memo: Kullback Leibler Divergence (KL Divergence) is a statistical distance of one probabiliy distribution P from another probability distribution Q. It can be interpreted as the difference between two probability distributions, P&Q, and is often used in machine learning in the loss function optimization. If we have certain prior distributions for our optimization, we can add a term to our loss objective to constrain the prediction distribution to some existing prior distribution via KL divergence. 
 
-<img width="200" height="200" src="psi.png">
-<img width="200" height="200" src="psi2.png">
+<img width="500" height="500" src="psi.png">
+<img width="500" height="500" src="psi2.png">
+
 > :memo: Population Stability Index (PSI) is similar to KL Divergence, but is the symetric KL Divergence (KL(a,b) + KL(b,a)). It can more directly be calculated discretely by binning the X-axis of the distributions into N number of bins, and calculating the difference between the number of entities for each distribution that fall into these bins. 
 
-<img width="200" height="200" src="kstest.png">
+<img width="500" height="500" src="kstest.png">
+
 > :memo: Lastly, the Kolmogorov-Smirnov test is a statistical test where the null hypothesis is that the two distributions are statistically identical, and the empirical cumulative distribution functions (eCDF) between the two distribution samples are compared. In layman's terms, we sort the data and look at the cumulative distirubtions of both datasets, and the differences between the distribution functions. A test statistic and p-value for the null hypothesis are calculated from the differences in these distribution functions. Above are the eCDFs for both SQL Injection datasets, we see a large difference overall, and our KS-test pvalue ended up being essentially 0; so extremely statistically significant. We can then reject the null hypothesis that the distributions are the same, and conclude data drift has occurred!
 
 
