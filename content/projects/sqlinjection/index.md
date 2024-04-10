@@ -14,7 +14,7 @@ A BERT LLM sentence transformer model was fine tuned using triplet/contrastive l
 
 [Notebook](https://www.kaggle.com/code/ubitquitin/finetuning-bert-with-triplet-contrastive-loss/notebook) | [Github Repo](https://github.com/ubitquitin/kafka-sqli)
 
-<img width="500" height="500" src="kafkapicmlflow.PNG">
+<img width="500" height="500" src="featured.PNG">
 
 - - - - - - - - - - - -
 
@@ -126,7 +126,7 @@ I wanted to simulate an threat detection model that could alert in real time. To
 
 Using [this](https://github.com/mtpatter/time-series-kafka-demo) tutorial, I was able to get a Kafka consumer and producer with a topic set up locally pretty quickly.
 
-<img width="500" height="500" src="kafkapicmlflow.PNG">
+<img width="500" height="500" src="featured.PNG">
 
 I set a random wait of 1-10 seconds to simulate 'real time' events coming into the stream. Additionally, I used MLFlow to track rolling accuracy, recall, precision and f1-score of the classifier.
 
