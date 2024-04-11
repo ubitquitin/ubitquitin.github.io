@@ -9,7 +9,8 @@ showRecent = true
 showTableOfContents = false
 +++
 
-{{< video src="dragdemo.mp4" type="video/mp4" preload="auto" autoplay="false">}}
+Demo:
+https://youtu.be/EdrIJUNsmQs
 
 dRAG dynamically generates a corpus about your Snowflake/Databrickcs schema and uses retrieval augmented generation (RAG) to answer specific questions about your data.
 
