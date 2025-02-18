@@ -59,7 +59,15 @@ jobs:
           hugo \
             --gc \
             --minify \
-            --baseURL "${{ steps.pages.outputs.base_url }}/"          
+            --baseURL "${{ steps.pages.outputs.base_url }}/"
+      - name: Debug: Check for symlinks
+        run: find ./public -type l
+      - name: Debug: Check artifact size
+        run: du -sh ./public
+      - name: Debug: Check for hard links
+        run: find ./public -type f -links +1
+      - name: Remove symlinks
+        run: find ./public -type l -exec rm -f {} \;          
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
