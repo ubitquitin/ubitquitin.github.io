@@ -14,6 +14,7 @@ showTableOfContents = false
 [Collab Notebook for Finetuning](https://colab.research.google.com/drive/1Mxy7BbJSWR6BCmz_z4lT1YioWPdxnLdn?usp=sharing)
 
 --------
+
 In this article I investigate the relationship between DeepSeek r1 think tokens and question difficulty. I find a small correlation exists and it diminishes with finetuning.
 
 I lead this article with a theoretical discussion and context setting. Feel free to skip down to ["Comparing deepseek-r1:1.5b with an SFT model"](#comparing-deepseek-r115b-with-an-sft-model) to see the work I did.
