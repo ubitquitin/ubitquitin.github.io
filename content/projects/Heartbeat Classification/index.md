@@ -1,6 +1,6 @@
 
 +++
-title = 'Hearthbeat Classification'
+title = 'Heartbeat Classification'
 summary = 'Deep learning heart disease multiclassification using LSTM/CNN/GANs.'
 languageCode = 'en-us'
 date = 2022-04-04
