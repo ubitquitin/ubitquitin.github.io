@@ -156,7 +156,7 @@ The reward function I used for the agent is as follows:
 &R_{\text{goal}} = +10000 \quad \text{(if agent reaches final room)}
 \end{aligned}
 $$ -->
-<img src="rewardlatex.png" alt="Alt text" width="1000">
+<img src="rewardlatex.png" alt="Alt text" width="1100">
 
 
 The hyperparameter values used in training were:
