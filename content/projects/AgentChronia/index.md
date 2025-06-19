@@ -24,19 +24,44 @@ This project uses the mlagents package in Unity.
 ## Agent actions
 In Runescape, there are several actions you can take to manvigate the tile-based map around you. You can, of course, walk in any cardinal & ordinal direction, but there are also a few special abilities you can use to move around faster.
 
+<div style="display: flex; align-items: flex-start; gap: 20px;">
+
+  ![Surge](surge.png)
+
+  **Surge:** Moves you 10 tiles in the direction you are facing. If there is an obstacle in the way, you will stop at that obstacle.
+
+</div>
+
+<div style="display: flex; align-items: flex-start; gap: 20px;">
+
+  ![StickyBomb](stickybomb.png)
+
+  **Sticky Bombs:** Among other items, you can throw these to re-orient and change the direction your character is facing. This can combo well with surge to allow you to surge in any direction you desire.
+
+</div>
+
+<div style="display: flex; align-items: flex-start; gap: 20px;">
+
+  ![Dive](dive.png)
+
+  **Dive:** Teleports you to any tile within 10 tiles from your character. This only works if your player can "see" the tile. See this explanation for what that means:
+
+</div>
+
+<!-- ---
+
 ![Surge](surge.png) **Surge:** Moves you 10 tiles in the direction you are facing. If there is an obstacle in the way, you will stop at that obstacle.
 
 ![StickyBomb](stickybomb.png) **Sticky Bombs:** Among other items, you can throw these to re-orient and change the direction your character is facing. This can combo well with surge to allow you to surge in any direction you desire.
 
-![Dive](dive.png) **Dive:** Teleports you to any tile within 10 tiles from your character. This only works if your player can "see" the tile. See this explanation for what that means:
+![Dive](dive.png) **Dive:** Teleports you to any tile within 10 tiles from your character. This only works if your player can "see" the tile. See this explanation for what that means: -->
 
 
 
-<div style="display: flex; align-items: flex-start; gap: 20px;">
 
-  <img src="divemech.png" alt="Alt text" width="700" />
+<img src="divemech.png" alt="Alt text" width="700" />
 
-  <pre><code>
+```
 public int isDiveable(int mypos_x, int mypos_z, int targetpos_x, int targetpos_z)
 {
     ... //variable initialization
@@ -69,9 +94,7 @@ public int isDiveable(int mypos_x, int mypos_z, int targetpos_x, int targetpos_z
         //we only exit if both vert and hori Dist are 0, meaning we can reach the tile
         return 0;
 }
-  </code></pre>
-
-</div>
+```
 
 The agent was created with several different actions to capture the different types of abilities that are available to a Runescape player to allow them to navigate the tilemap more quickly.
 ```
@@ -113,7 +136,7 @@ During training, several parallelized instances of the obstacle course map were 
 
 The reward function I used for the agent is as follows:
 
-$$
+<!-- $$
 \begin{aligned}
 &\Large \textbf{Reward} = R_{\text{exist}} + R_{\text{dist}} + R_{\text{surge}} + R_{\text{inertia}} + R_{\text{floor}} + R_{\text{goal}} \\
 \\
@@ -132,35 +155,38 @@ $$
 
 &R_{\text{goal}} = +10000 \quad \text{(if agent reaches final room)}
 \end{aligned}
-$$
+$$ -->
+<img src="rewardlatex.png" alt="Alt text" width="1000">
 
 
 The hyperparameter values used in training were:
-$$
+<!-- $$
 \beta = -0.05\\
 \alpha = 0.005\\
 \gamma = -0.01 \\
 \varepsilon = 0.01 \text{(prevents divide-by-zero)}
-$$
-
+$$ -->
+<img src="hyperparamlatex.png" alt="Alt text" width="300">
 
 
 ## PPO
 
 The algorithm used to train my agent was Proximal Policy Optimization (PPO). In this section I will talk briefly about what PPO is and how it works.  Feel free to jump ahead to the initial results.
 
-$$
+<!-- $$
 L^{\text{CLIP}}(\theta) = \mathbb{E}_t \left[ \min \left(
 r_t(\theta) \hat{A}_t,\
 \text{clip}(r_t(\theta),\ 1 - \epsilon,\ 1 + \epsilon) \hat{A}_t
 \right) \right]
-$$
+$$ -->
+<img src="ppolatex.png" alt="Alt text" width="600">
 
 where
 
-$$
+<!-- $$
 r_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta_{\text{old}}}(a_t \mid s_t)}
-$$
+$$ -->
+<img src="cliplatex.png" alt="Alt text" width="150">
 
 PPO, like other policy gradient methods, aims to maximize the reward objective specified by the agent's policy. This means that the algorithm defines a policy $\pi$ for the agent that determines the probability of taking certain actions in certain states. This policy is iterated on to try and maximize the reward the agent recieves from its environment. The key to PPO, is that there are additional components of the objective function to ensure regularization. Stable learning is achieved by adding a clip function on the ratio between the new and old policy probabilities. This clips the advantage/improvement, and enforces small updates to the policy, leading to more stable improvement.
 
