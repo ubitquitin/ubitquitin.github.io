@@ -26,7 +26,7 @@ In Runescape, there are several actions you can take to manvigate the tile-based
 
 <div style="display: flex; align-items: flex-start; gap: 20px;">
 
-  ![Surge](surge.png)
+  <img src="surge.png" alt="Alt text" width="40" />
 
   **Surge:** Moves you 10 tiles in the direction you are facing. If there is an obstacle in the way, you will stop at that obstacle.
 
@@ -34,7 +34,7 @@ In Runescape, there are several actions you can take to manvigate the tile-based
 
 <div style="display: flex; align-items: flex-start; gap: 20px;">
 
-  ![StickyBomb](stickybomb.png)
+  <img src="stickybomb.png" alt="Alt text" width="25" />
 
   **Sticky Bombs:** Among other items, you can throw these to re-orient and change the direction your character is facing. This can combo well with surge to allow you to surge in any direction you desire.
 
@@ -42,7 +42,7 @@ In Runescape, there are several actions you can take to manvigate the tile-based
 
 <div style="display: flex; align-items: flex-start; gap: 20px;">
 
-  ![Dive](dive.png)
+  <img src="dive.png" alt="Alt text" width="35" />
 
   **Dive:** Teleports you to any tile within 10 tiles from your character. This only works if your player can "see" the tile. See this explanation for what that means:
 
