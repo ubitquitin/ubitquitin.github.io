@@ -70,9 +70,7 @@ public int isDiveable(int mypos_x, int mypos_z, int targetpos_x, int targetpos_z
         {
             movedVert = false;
             movedHori = false;
-            // Debug.Log("LOCALPOS");
-            // Debug.Log(-1*(localpos.First - TILEMAP_RADIUS));
-            // Debug.Log(localpos.Second - TILEMAP_RADIUS);
+
             if((horiDist > 0) && map[localpos.First, (localpos.Second + horiMag)] == 0)
             {
                 localpos.Second = localpos.Second + horiMag;
