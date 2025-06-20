@@ -22,7 +22,7 @@ This project uses the mlagents package in Unity.
 # Implementation Details
 
 ## Agent actions
-In Runescape, there are several actions you can take to manvigate the tile-based map around you. You can, of course, walk in any cardinal & ordinal direction, but there are also a few special abilities you can use to move around faster.
+In Runescape, there are several actions you can take to navigate the tile-based map around you. You can, of course, walk in any cardinal & ordinal direction, but there are also a few special abilities you can use to move around faster.
 
 <div style="display: flex; align-items: flex-start; gap: 20px;">
 
@@ -188,7 +188,7 @@ r_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta_{\text{old}}}(a_t \mid
 $$ -->
 <img src="cliplatex.png" alt="Alt text" width="150">
 
-PPO, like other policy gradient methods, aims to maximize the reward objective specified by the agent's policy. This means that the algorithm defines a policy $\pi$ for the agent that determines the probability of taking certain actions in certain states. This policy is iterated on to try and maximize the reward the agent recieves from its environment. The key to PPO, is that there are additional components of the objective function to ensure regularization. Stable learning is achieved by adding a clip function on the ratio between the new and old policy probabilities. This clips the advantage/improvement, and enforces small updates to the policy, leading to more stable improvement.
+PPO, like other policy gradient methods, aims to maximize the reward objective specified by the agent's policy. This means that the algorithm defines a policy π for the agent that determines the probability of taking certain actions in certain states. This policy is iterated on to try and maximize the reward the agent recieves from its environment. The key to PPO, is that there are additional components of the objective function to ensure regularization. Stable learning is achieved by adding a clip function on the ratio between the new and old policy probabilities. This clips the advantage/improvement, and enforces small updates to the policy, leading to more stable improvement.
 
 ## Initial Results
 
