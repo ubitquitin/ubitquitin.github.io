@@ -1,0 +1,3293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tale of Laplace- AI Fluency game demo</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Share+Tech+Mono&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap');
+
+        body {
+            margin: 0;
+            background-color: #02040a;
+            color: #38bdf8;
+            font-family: 'Share Tech Mono', monospace;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #game-container {
+            position: relative;
+            width: 900px;
+            height: 650px;
+            box-shadow: 0 0 50px rgba(56, 189, 248, 0.1);
+            border: 1px solid #1e293b;
+            background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+            border-radius: 8px;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+
+        .dialogue-box {
+            position: relative;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid #38bdf8;
+            border-left: 5px solid #38bdf8;
+            padding: 25px;
+            margin-top: auto;
+            border-radius: 0 12px 0 12px;
+            pointer-events: auto;
+            width: 100%;
+            max-width: 750px;
+            align-self: center;
+            display: none; /* Block display by default (via JS) */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            z-index: 20; 
+        }
+
+        .dialogue-header {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 20px;
+            color: #fbbf24;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding-left: 170px;
+        }
+
+        .dialogue-text {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #e2e8f0;
+            padding-left: 170px;
+            min-height: 60px;
+        }
+
+        #portrait-container {
+            position: absolute;
+            top: 0;    /* stretch upward */
+            bottom: 0; /* stretch downward */
+            left: 0;
+
+            width: 150px;
+            background-color: #0f172a;
+            border-right: 2px solid #38bdf8;
+            border-top: 2px solid #38bdf8;
+            border-bottom: 2px solid #38bdf8;
+
+            border-radius: 0 12px 0 12px;
+            display: none;
+            overflow: hidden;
+            box-shadow: 5px -5px 15px rgba(0,0,0,0.3);
+            z-index: 25;
+        }
+
+        #portrait-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .btn {
+            background: rgba(56, 189, 248, 0.1);
+            color: #38bdf8;
+            border: 1px solid #38bdf8;
+            padding: 12px 30px;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            pointer-events: auto;
+            
+            /* --- POSITION FIX --- */
+            /* Anchor outside the bottom-right of the dialogue box */
+            position: absolute;
+            bottom: -60px; /* Push it down below the box */
+            right: 0;      /* Align with right edge */
+        }
+        
+        .btn:hover {
+            background: #38bdf8;
+            color: #000;
+            box-shadow: 0 0 15px #38bdf8;
+        }
+
+        /* INTRO MODE OVERRIDE */
+        /* Keeps the button inside/visible during the full-screen intro */
+        #game-container.intro-mode .btn {
+            position: relative; 
+            bottom: auto;
+            right: auto;
+            margin: 20px auto 0 auto;
+            display: block;
+            width: 200px;
+        }
+
+        .control-panel {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            gap: 20px;
+            pointer-events: auto;
+        }
+
+        .control-panel .btn {
+            position: relative;
+            bottom: auto;
+            right: auto;
+        }
+
+        /* 1. Ensure the HUD container spans the top and pushes items to corners */
+        #hud {
+            position: absolute; /* Snap to the layer's positioning */
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between; /* Pushes Level to Left, Vector to Right */
+            align-items: flex-start;        /* Snap to the top edge */
+            pointer-events: none;
+            box-sizing: border-box;         /* Ensure padding doesn't break width */
+        }
+
+        /* 2. Update .stat-box to ensure it anchors correctly */
+        .stat-box {
+            background: rgba(2, 6, 23, 0.9);
+            padding: 10px 15px;
+            border: 1px solid #1e293b;
+            border-left: 4px solid #38bdf8;
+            border-radius: 0 12px 0 12px;
+            color: #94a3b8;
+            font-family: 'Rajdhani', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            min-width: 200px;
+            
+            /* ADD THIS: Ensures the box content doesn't shrink/break */
+            flex-shrink: 0; 
+            pointer-events: auto; /* Allows tooltips if you add them later */
+        }
+
+        /* Style for the new Level Icon */
+        #level-icon {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 5px #38bdf8);
+            display: none; 
+        }
+
+        /* Container for the text */
+        .level-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start; /* Snap text to the left inside the box */
+        }
+
+        /* Level Number */
+        .lvl-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #38bdf8;
+            line-height: 1;
+            text-transform: uppercase;
+        }
+
+        /* Level Name */
+        .lvl-subtitle {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        .stat-box span { color: #fff; }
+        #game-container::before {
+            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 4px; pointer-events: none; z-index: 10; opacity: 0.3;
+        }
+        
+        #neuron-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            display: none;
+            z-index: 30;
+            background: rgba(0,0,0,0.8);
+            padding: 40px;
+            border: 1px solid #38bdf8;
+            border-radius: 10px;
+        }
+        #neuron-img {
+            max-width: 200px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 10px #38bdf8);
+        }
+
+        /* --- INTRO MODE STYLES --- */
+
+        /* 1. Hide Scanlines and HUD during intro */
+        #game-container.intro-mode::before,
+        #game-container.intro-mode #hud, 
+        #game-container.intro-mode #portrait-container {
+            display: none !important;
+        }
+
+        /* 2. Remove the glow/shadow from the container during intro */
+        #game-container.intro-mode {
+            box-shadow: none;
+            border: none;
+            background: #000; /* Solid black background */
+        }
+
+        /* 3. Restyle the Dialogue Box for Intro (UPDATED V3) */
+        #game-container.intro-mode .dialogue-box {
+            /* Position at the very bottom, full width */
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            max-width: 100%;
+
+            /* --- CHANGE 1: Reduce Height --- */
+            /* Was 200px, now shorter so it doesn't cover too much */
+            height: 140px;
+
+            /* --- CHANGE 2: Increase Transparency --- */
+            /* Changed alpha from 0.7 to 0.4 so it's much more see-through */
+            background-color: rgba(0, 0, 0, 0.4);
+
+            /* Keep blur so text is readable over busy image parts */
+            backdrop-filter: blur(8px);
+
+            /* A nice top border to separate image from text area */
+            border-top: 2px solid #38bdf8;
+
+            border-bottom: none;
+            border-left: none;
+            border-right: none;
+            border-radius: 0;
+
+            /* Layout */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            /* Reduced padding slightly for the shorter box */
+            padding: 10px 50px;
+            box-shadow: none;
+        }
+
+        /* 4. Adjust Text inside Intro Dialogue */
+        #game-container.intro-mode .dialogue-header {
+            padding-left: 0;
+            text-align: center;
+            margin-bottom: 10px;
+            color: #38bdf8; /* Keep it clean blue */
+        }
+
+        #game-container.intro-mode .dialogue-text {
+            padding-left: 0;
+            text-align: center;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 20px;
+            color: #fff;
+        }
+
+        /* 5. Reposition Next Button for Intro */
+        #game-container.intro-mode .btn {
+            position: relative; /* Flow naturally below text */
+            bottom: auto;
+            right: auto;
+            margin: 10px auto 0 auto; /* Center it */
+            display: block;
+            width: 200px;
+            background: #333;
+            border-color: #555;
+            color: #fff;
+        }
+
+        #game-container.intro-mode .btn:hover {
+            background: #38bdf8;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <canvas id="gameCanvas" width="900" height="650"></canvas>
+    
+    <div id="ui-layer">
+        <div id="hud">
+            <div id="level-display" class="stat-box">
+                <img id="level-icon" src="" alt="">
+                <div class="level-info">
+                    <div id="lvl-num" class="lvl-title">SYSTEM STATUS</div>
+                    <div id="lvl-name" class="lvl-subtitle">OFFLINE</div>
+                </div>
+            </div>
+
+            <div id="coords-display" class="stat-box" style="display:none;">
+                VECTOR: <span>[0.00, 0.00]</span>
+            </div>
+        </div>
+
+        <div id="dialogue" class="dialogue-box">
+            <div id="portrait-container">
+                <img id="portrait-img" src="" alt="Character">
+            </div>
+            <div id="dialogue-speaker" class="dialogue-header">SYSTEM ALERT</div>
+            <div id="dialogue-content" class="dialogue-text"></div>
+            <button id="next-btn" class="btn">NEXT</button>
+        </div>
+
+        <div id="kv-controls" class="control-panel">
+            <button id="btn-cache" class="btn">ENABLE CACHE</button>
+            <button id="btn-head" class="btn" disabled style="opacity:0.5">ADD ATTENTION HEAD</button>
+            <button id="btn-share" class="btn" disabled style="opacity:0.5">MERGE LATENT CACHE</button>
+        </div>
+
+        <div id="neuron-overlay">
+            <img id="neuron-img" src="" alt="Neuron Calibrated">
+            <div style="font-family: 'Rajdhani'; font-size: 24px; color: #38bdf8; margin-bottom: 10px;">NEURAL CALIBRATION COMPLETE</div>
+            <div style="font-family: 'Share Tech Mono'; font-size: 16px; color: #fff;">Meaning vectors aligned.</div>
+        </div>
+    </div>
+</div>
+<div style="display: none;">
+    <video id="vid-ai-base" src="sprites/level3/anim1.mp4" loop muted playsinline preload="auto"></video>
+    
+    <video id="vid-ai-full" src="sprites/level3/anim2.mp4" loop muted playsinline preload="auto"></video>
+    
+    <video id="vid-ai-grouped" src="sprites/level3/anim3.mp4" loop muted playsinline preload="auto"></video>
+    <video id="vid-ai-evil" src="sprites/level6/evil_robo.mp4" loop muted playsinline preload="auto"></video>
+    <video id="vid-ai-glitch" src="sprites/level6/robo_glitch_mov.mp4" loop muted playsinline preload="auto"></video>
+</div>
+
+<script>
+/**
+ * NEXUS-7 REPAIR - GAME ENGINE v4.0
+ */
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const vidBase = document.getElementById('vid-ai-base');
+const vidFull = document.getElementById('vid-ai-full');
+const vidGrouped = document.getElementById('vid-ai-grouped');
+const vidEvil = document.getElementById('vid-ai-evil');
+const vidGlitch = document.getElementById('vid-ai-glitch');
+let currentAiVideo = vidBase; // Default
+let currentInterludeImage = "INTERLUDE_BG"; // Default corruption image path
+let nextInterludeMusic = "BGM_ACTION"; // Which song to play
+let interludeMusicImmediate = false;   // Should it play instantly (Image) or wait (Robot)?
+
+// --- AUDIO CONFIGURATION ---
+const AUDIO_PATHS = {
+    // Music (BGM)
+    "BGM_ACTION": "sounds/Moonlit Circuits.mp3",
+    "BGM_AMBIENCE": "sounds/Whispering Realms.mp3",
+    "BGM_BOSSBATTLE": "sounds/Rogue Circuitry.mp3",
+    "BGM_LAB": "sounds/Midnight Reactor.mp3",
+    "BGM_WIN": "sounds/Pixelated Glory.mp3",
+    
+    // Sound Effects (SFX)
+    "SFX_TYPE": "sounds/typing.wav",
+    "SFX_CONNECT": "sounds/electric_zap.wav",
+    "SFX_ERROR": "sounds/buzzer.wav",
+    "SFX_WIN": "sounds/chime.wav"
+};
+
+const audioCache = {};
+
+function getAudio(key) {
+    if (!AUDIO_PATHS[key]) return null;
+    if (!audioCache[key]) {
+        audioCache[key] = new Audio(AUDIO_PATHS[key]);
+    }
+    return audioCache[key];
+}
+
+function playBGM(key, volume = 0.5) {
+    if (!isAudioEnabled) return; // Wait for user interaction first
+
+    // Don't restart if it's already playing
+    if (currentBGM && currentBGM.key === key && !currentBGM.audio.paused) return;
+
+    // Stop previous BGM
+    stopBGM();
+
+    const audio = getAudio(key);
+    if (audio) {
+        audio.loop = true; // Loop background music
+        audio.volume = volume;
+        audio.currentTime = 0; // Reset to start
+        audio.play().catch(e => console.log("Autoplay blocked:", e));
+        
+        // Store as current
+        currentBGM = { key, audio };
+    }
+}
+
+function stopBGM() {
+    if (currentBGM) {
+        currentBGM.audio.pause();
+        currentBGM.audio.currentTime = 0;
+        currentBGM = null;
+    }
+}
+
+function playSFX(key, volume = 1.0) {
+    if (!isAudioEnabled) return;
+
+    const audio = getAudio(key);
+    if (audio) {
+        // Clone the node so we can play overlapping sounds (e.g. rapid typing)
+        const sfx = audio.cloneNode(); 
+        sfx.volume = volume;
+        sfx.play().catch(e => console.log("SFX blocked:", e));
+    }
+}
+
+// Global Audio State
+let currentBGM = null;
+let isAudioEnabled = false; // Browser flag
+
+// --- UNLOCK AUDIO ON FIRST INTERACTION ---
+function unlockAudio() {
+    if (!isAudioEnabled) {
+        isAudioEnabled = true;
+        // Optional: Start your Prelude or Intro music immediately upon unlock
+        playBGM("BGM_AMBIENCE"); 
+        
+        // Remove listeners so this only runs once
+        window.removeEventListener('click', unlockAudio);
+        window.removeEventListener('keydown', unlockAudio);
+    }
+}
+
+window.addEventListener('click', unlockAudio);
+window.addEventListener('keydown', unlockAudio);
+
+function switchAiVideo(mode) {
+    // 1. Pause ALL videos first
+    if(vidBase) vidBase.pause();
+    if(vidFull) vidFull.pause();
+    if(vidGrouped) vidGrouped.pause();
+    if(vidEvil) vidEvil.pause();
+    if(vidGlitch) vidGlitch.pause();
+
+    // 2. Select the new target
+    let target = vidBase;
+    if (mode === 'full') target = vidFull;
+    else if (mode === 'grouped') target = vidGrouped;
+    else if (mode === 'evil') target = vidEvil;
+    else if (mode === 'glitch') target = vidGlitch;
+
+    // 3. Play the target
+    if (target) {
+        target.currentTime = 0;
+        target.play().catch(e => console.log("Video play blocked", e));
+        currentAiVideo = target;
+    }
+}
+
+// --- USER CONFIGURATION: ADD YOUR SPRITE PATHS HERE ---
+const SPRITE_PATHS = {
+    "DEBUGGER": "sprites/debugger.jpg",   
+    "NEXUS-7": "sprites/robot_fritz.jpg",    
+    "SYSTEM": "",
+    "NEURON": "sprites/neuron.jpg",
+    
+    // Level 1 Phase 1
+    "MAN": "sprites/level1/man.png",
+    "QUEEN": "sprites/level1/queen.png",
+    
+    // Level 1 Phase 2
+    "LION": "sprites/level1/lion.png",
+    "CAT": "sprites/level1/cat.png",
+    "JAGUAR": "sprites/level1/jaguar.png",
+    "KITTEN": "sprites/level1/kitten.png",
+
+    // Level 1 Phase 3 (Food)
+    "CARROT": "sprites/level1/carrot.png",
+    "PRETZEL": "sprites/level1/pretzel.png",
+    "CHOCO_PRETZEL": "sprites/level1/choco_pretzel.png",
+
+    // Level 2 (Attention Heads)
+    "HEAD_SEMANTIC": "sprites/level2/head1.png",
+    "HEAD_STRUCTURAL": "sprites/level2/head2.png",
+    "HEAD_PHYSICAL": "sprites/level2/head3.png",
+
+    // --- NEW LEVEL 3 ASSETS ---
+    "AI_WRITER_BASE": "sprites/level3/ai_base.png",   // The robot sitting at a desk
+    "HAT_FULL_KV": "sprites/level3/hat_bulky.png",    // Big, silly helmet with wires
+    "HAT_GROUPED_KV": "sprites/level3/headband_sleek.png", // Cool futuristic headband
+
+    "TRUE NEXUS-7": "sprites/evil_robo_sprite.png", // For Level 6
+    "NEXUS-7 (GLITCH)": "sprites/robo_glitch.png", // For Level 6 phase 2 and level 7
+    "NEXUS-8": "sprites/robot_happy.jpg" // For Ending
+};
+
+// Image Cache
+const imgCache = {};
+function getImg(key) {
+    if (!SPRITE_PATHS[key]) return null;
+    if (!imgCache[key]) {
+        const i = new Image();
+        i.src = SPRITE_PATHS[key];
+        imgCache[key] = i;
+    }
+    return imgCache[key];
+}
+
+// Add these to your existing SPRITE_PATHS
+SPRITE_PATHS["START_BG"] = "gameart/nexus7 flower concrete.jpg";
+
+SPRITE_PATHS["INTRO_BG_1"] = "gameart/world map.jpg";
+SPRITE_PATHS["INTRO_BG_2"] = "gameart/world map tech ruined.jpg"; 
+SPRITE_PATHS["INTRO_BG_3"] = "gameart/aethelguard.jpg"; 
+SPRITE_PATHS["INTRO_BG_4"] = "gameart/flying.jpg";
+SPRITE_PATHS["INTRO_BG_5"] = "gameart/nexus7 flower concrete.jpg"; 
+
+SPRITE_PATHS["END_BG_1"] = "sprites/wingame.jpg";
+SPRITE_PATHS["END_BG_2"] = "gameart/secret_lab.jpg"; 
+SPRITE_PATHS["END_BG_3"] = "gameart/vision attacks mushroom.jpg"; 
+SPRITE_PATHS["END_BG_4"] = "gameart/alphafold attack mermaids.jpg"; 
+SPRITE_PATHS["END_BG_5"] = "gameart/graph attacks shardlands ppl.jpg"; 
+SPRITE_PATHS["END_BG_6"] = "gameart/secret_lab.jpg"; 
+
+SPRITE_PATHS["INTERLUDE_BG"] = "gameart/corruption 0th.png";
+SPRITE_PATHS["INTERLUDE_BG2"] = "gameart/corruption_first.png";
+SPRITE_PATHS["INTERLUDE_BG3"] = "gameart/corruption final.jpg";
+
+SPRITE_PATHS["ICO_LV1"] = "sprites/level1/level1_icon.jpg";
+SPRITE_PATHS["ICO_LV2"] = "sprites/level2/level2_icon.jpg";
+SPRITE_PATHS["ICO_LV3"] = "sprites/level3/level3_icon.jpg";
+SPRITE_PATHS["ICO_LV4"] = "sprites/level4/level4_icon.jpg";
+SPRITE_PATHS["ICO_LV5"] = "sprites/level5/level5_icon.jpg";
+SPRITE_PATHS["ICO_LV6"] = "sprites/level6/level6_icon.jpg";
+SPRITE_PATHS["ICO_LV7"] = "sprites/level7/level7_icon.jpg";
+SPRITE_PATHS["BG_LEVEL_1"] = "sprites/level1/embedding_space.jpg";
+SPRITE_PATHS["BG_LEVEL_2"] = "sprites/level2/coverart.jpg";
+SPRITE_PATHS["BG_LEVEL_3"] = "sprites/level3/introart.jpg";
+SPRITE_PATHS["BG_LEVEL_3_WIN"] = "sprites/level3/coverart.jpg";
+SPRITE_PATHS["BG_LEVEL_4"] = "sprites/level4/coverart.jpg";
+SPRITE_PATHS["BG_LEVEL_5"] = "sprites/level5/coverart.jpg";
+SPRITE_PATHS["BG_LEVEL_6"] = "gameart/nexus7 actually evil.jpg";
+SPRITE_PATHS["BG_LEVEL_6_PHASE2"] = "sprites/level6/coverart.jpg";
+SPRITE_PATHS["BG_LEVEL_7"] = "sprites/level7/coverart.jpg";
+
+// --- LEVEL CONFIGURATION ---
+const LEVEL_CONFIG = {
+    0: { title: "SYSTEM ALERT", subtitle: "CRITICAL FAILURE", icon: "NEXUS-7" }, 
+    1: { title: "LEVEL 1", subtitle: "EMBEDDING SPACE", icon: "ICO_LV1", bg: "BG_LEVEL_1" },
+    2: { title: "LEVEL 2", subtitle: "ATTENTION MECHANISM", icon: "ICO_LV2", bg: "BG_LEVEL_2" },
+    3: { title: "LEVEL 3", subtitle: "KV CACHE MEMORY", icon: "ICO_LV3", bg: "BG_LEVEL_3" }, 
+    4: { title: "LEVEL 4", subtitle: "MIXTURE OF EXPERTS", icon: "ICO_LV4", bg: "BG_LEVEL_4" }, 
+    5: { title: "LEVEL 5", subtitle: "RAG RETRIEVAL", icon: "ICO_LV5", bg: "BG_LEVEL_5" },
+    6: { title: "LEVEL 6", subtitle: "FINE-TUNING (LoRA)", icon: "ICO_LV6", bg: "BG_LEVEL_6" },
+    7: { title: "LEVEL 7", subtitle: "RLHF ALIGNMENT", icon: "ICO_LV7", bg: "BG_LEVEL_7" }
+};
+
+let currentLevelBg = null;
+
+// --- NEW TRANSITION HELPER ---
+function startLevelTransition(nextLvl, dialogueLines) {
+    // 1. Set State
+    currentState = 'TRANSITION';
+    
+    // 2. Remove Scanlines (Clean View)
+    document.getElementById('game-container').classList.add('clean-view'); // <--- ADD THIS
+
+    // 3. Load BG
+    const config = LEVEL_CONFIG[nextLvl];
+    if (config && config.bg) {
+        currentLevelBg = config.bg;
+    }
+
+    // 4. Trigger Dialogue
+    triggerDialogue(dialogueLines, () => {
+        startLevel(nextLvl);
+    });
+}
+
+// Define the Cutscene Sequence
+const INTRO_SCENES = [
+    { 
+        img: "INTRO_BG_1", 
+        dialogue: [
+            { speaker: "", text: "Laplace. A peaceful realm." },
+            { speaker: "", text: "Many diverse continents and races reside here. Peace and order has been maintained for milenia due to a carefully construed isolation between the continents." },
+        ]
+    },
+    { 
+        img: "INTRO_BG_2", 
+        dialogue: [
+            { speaker: "", text: "This isolation, however, prevented anyone from noticing one land grow silent..." },
+        ]
+    },
+    { 
+        img: "INTRO_BG_3", 
+        dialogue: [
+            { speaker: "", text: "Aethelguard, known for its technological innovation and mechanical might." },
+            { speaker: "", text: "No one knows what happened there. All communications ceased. The continent vanished without a trace." },
+        ]
+    },
+    { 
+        img: "INTRO_BG_4", 
+        dialogue: [
+            { speaker: "DEBUGGER", text: "And so, I was tasked to investigate. To learn more about what happened to our sister-land." },
+            { speaker: "DEBUGGER", text: "Engineer! I need you to come with me to help investigate this technological terrain!" },
+        ]
+    },
+    { 
+        img: "INTRO_BG_5", 
+        dialogue: [
+            { speaker: "DEBUGGER", text: "After days of exploring ruins, no one in sight, we stumble across a lone figure, slouched in the distance." },
+            { speaker: "DEBUGGER", text: "Look closely! Is that... a robot? It seems to be sparking and damaged... it's not reacting to us..." },
+            { speaker: "DEBUGGER", text: "Engineer, we have to help it! This could be the key to understanding what happened here!" },
+        ]
+    }
+];
+
+// Define the Cutscene Sequence
+let endIndex = 0;
+let currentEndImage = null;
+const END_SCENES = [
+    { 
+        img: "END_BG_1", 
+        dialogue: [
+            { speaker: "NEXUS-8", text: "I am Nexus. Online. Safe. Aligned. Ready." },
+            { speaker: "DEBUGGER", text: "Great work, Engineer. You built a modern AI stack." },
+            { speaker: "NEXUS-8", text: "Come quick humans, there is something you must see." },
+            { speaker: "... ", text: "Nexus leads you to a secret lab." },
+        ]
+    },
+    { 
+        img: "END_BG_2", 
+        dialogue: [
+            { speaker: "DEBUGGER", text: "Incredible...These designs...Does that mean there are more of you? Different types?" },
+            { speaker: "NEXUS-8", text: "I am but the base model for a series of other AI." },
+            { speaker: "DEBUGGER", text: "Well we were able to turn you, surely we can do so with the other models."},
+            { speaker: "NEXUS-8", text: "These models all specialize in different things and work slightly differently than I."},
+            { speaker: "NEXUS-8", text: "And as we speak they have deployed themselves across the world..."},
+        ]
+    },
+    { 
+        img: "END_BG_3", 
+        dialogue: [
+            { speaker: "NEXUS-8", text: "The Vision models to the fungal land of Mycota." },
+        ]
+    },
+    { 
+        img: "END_BG_4", 
+        dialogue: [
+            { speaker: "NEXUS-8", text: "The DNA models to the aquatic land of Sirenia." },
+        ]
+    },
+    { 
+        img: "END_BG_5", 
+        dialogue: [
+            { speaker: "NEXUS-8", text: "The Network models to the crystalline land of Durus." },
+        ]
+    },
+    { 
+        img: "END_BG_6", 
+        dialogue: [
+            { speaker: "NEXUS-8", text: "With your help, Engineer, we can ensure they are all aligned and safe for humanity and the other races." },
+            { speaker: "DEBUGGER", text: "Only when we truly understand how these new technologies work, can we work together to build a better future." },
+            { speaker: "DEBUGGER", text: "Looks like there is more work to do, Engineer!" }
+        ]
+    },
+];
+
+// UI Elements
+const dialogueBox = document.getElementById('dialogue');
+const dialogueHeader = document.getElementById('dialogue-speaker');
+const dialogueText = document.getElementById('dialogue-content');
+const nextBtn = document.getElementById('next-btn');
+const levelIndicator = document.getElementById('level-indicator');
+const coordsDisplay = document.getElementById('coords-display');
+const kvControls = document.getElementById('kv-controls');
+const btnCache = document.getElementById('btn-cache');
+const btnHead = document.getElementById('btn-head');
+const btnShare = document.getElementById('btn-share');
+const portraitContainer = document.getElementById('portrait-container');
+const portraitImg = document.getElementById('portrait-img');
+const neuronOverlay = document.getElementById('neuron-overlay');
+const neuronImg = document.getElementById('neuron-img');
+
+if(SPRITE_PATHS["NEURON"]) neuronImg.src = SPRITE_PATHS["NEURON"];
+
+// Constants
+const C_BG = '#0f172a';
+const C_GRID = '#1e293b';
+const C_ACCENT = '#38bdf8'; 
+const C_PLAYER = '#fbbf24'; 
+const C_DANGER = '#ef4444'; 
+const C_TEXT = '#e2e8f0';
+const C_DIM = '#64748b';
+const C_SUCCESS = '#22c55e';
+
+// --- UTILS ---
+function drawText(text, x, y, size = 20, color = C_TEXT, align = 'center', font = 'Rajdhani') {
+    ctx.fillStyle = color;
+    ctx.font = `${size}px '${font}'`;
+    ctx.textAlign = align;
+    ctx.fillText(text, x, y);
+}
+
+function getVector(x, y) {
+    // 450, 325 is the center of the screen
+    let vx = (x - 450) / 350; 
+    let vy = -(y - 325) / 250; 
+    return { x: vx.toFixed(2), y: vy.toFixed(2) };
+}
+
+function drawArrow(ctx, fromX, fromY, toX, toY, color) {
+    let headlen = 10; 
+    let dx = toX - fromX;
+    let dy = toY - fromY;
+    let angle = Math.atan2(dy, dx);
+    
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(fromX, fromY);
+    ctx.lineTo(toX, toY);
+    ctx.stroke();
+    
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(toX, toY);
+    ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+    ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+    ctx.fill();
+}
+
+function drawAxisArrow(ctx, x, y, angle, color) {
+    let headlen = 8; 
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x - headlen * Math.cos(angle - Math.PI / 6), y - headlen * Math.sin(angle - Math.PI / 6));
+    ctx.lineTo(x - headlen * Math.cos(angle + Math.PI / 6), y - headlen * Math.sin(angle + Math.PI / 6));
+    ctx.fill();
+}
+
+// Game State
+let currentState = 'PRELUDE'; 
+let levelData = {};
+let player = {};
+let keys = {};
+let mouse = { x: 0, y: 0, down: false };
+let frameCount = 0;
+
+// Input
+window.addEventListener('keydown', e => keys[e.code] = true);
+window.addEventListener('keyup', e => keys[e.code] = false);
+canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    mouse.x = e.clientX - rect.left;
+    mouse.y = e.clientY - rect.top;
+});
+canvas.addEventListener('mousedown', () => mouse.down = true);
+canvas.addEventListener('mouseup', () => mouse.down = false);
+
+let introIndex = 0;
+let currentIntroImage = null;
+
+// --- NARRATIVE ---
+const STORY = {
+    prelude: [
+        { speaker: "SYSTEM", text: "CRITICAL FAILURE. NEXUS-7 AI MODEL IS UNSTABLE." },
+        { speaker: "DEBUGGER", text: "I'm jacking in. The model's logic cores are scrambled. It's hallucinating nonsense." },
+        { speaker: "NEXUS-7", text: "I... I AM... A TOASTER? NO... I AM THE SKY..." },
+        { speaker: "DEBUGGER", text: "The Embedding Space is fractured. Words have lost their meaning. We need to realign them." },
+        { speaker: "SYSTEM", text: "PHASE 1: EMBEDDING SPACE (Meaning Map)." }
+    ],
+    level1_intro: [
+        { speaker: "DEBUGGER", text: "To understand language, an AI stores the meaning of each word in a sort of `mental map`." },
+        { speaker: "DEBUGGER", text: "This lets it understand which words or phrases are similar and which are far apart." },
+        { speaker: "DEBUGGER", text: "Words are stored as 'Vectors'—arrows pointing to a specific location in mental map." },
+        { speaker: "DEBUGGER", text: "Words with similar definitions cluster together. Drag the vector tip to the correct word to re-index it." },
+        { speaker: "SYSTEM", text: "SECTOR 1: SOCIETY & GENDER." }
+    ],
+    level1_sector2: [
+        { speaker: "SYSTEM", text: "SECTOR 1 ALIGNED." },
+        { speaker: "DEBUGGER", text: "But the meaning of words can change, right? What does the word `box` mean?" },
+        { speaker: "NEXUS-7", text: "TO FIGHT SOMEONE!" },
+        { speaker: "NEXUS-7", text: "WAIT NO... AN OBJECT TO STORE STUFF?" },
+        { speaker: "NEXUS-7", text: "OR IS IT A SHAPE..." },
+        { speaker: "NEXUS-7", text: "AAAAAAAAAAHHHHHHH!!!" },
+        { speaker: "DEBUGGER", text: "The meaning of words can change based on the words around it." },
+        { speaker: "DEBUGGER", text: "Other words in the sentence, like the context or even just adjectives change the meaning of words, and move them around in the mental map."}
+    ],
+    level1_sector3: [ // NEW 3D FOOD GRID
+        { speaker: "SYSTEM", text: "BIOLOGY VECTORS CALIBRATED." },
+        { speaker: "DEBUGGER", text: "Final calibration: The Food Dimension. This is a 3D semantic space." },
+        { speaker: "DEBUGGER", text: "Axes: Sweet/Savory, Healthy/Unhealthy, Soft/Crunchy. Watch how adjectives shift meaning across multiple axes." }
+    ],
+    level2_intro_part1: [
+        { speaker: "NEXUS-7", text: "MEANING... RESTORED. BUT I CANNOT... CONNECT." },
+        { speaker: "DEBUGGER", text: "Nexus understands words, but not sentences. We need to fix the Attention Head Mechanism." },
+        { speaker: "DEBUGGER", text: "The Attention Head mechanism is how an AI connects words together. " },
+        { speaker: "DEBUGGER", text: "It creates connections between words, and lets the AI understand how each word contributes to the overall meaning of a sentence." }
+    ],
+    level2_intro_part2: [
+        // This will appear AFTER the level renders
+        { speaker: "DEBUGGER", text: "Drag the best word into the slot. Hover over the connecting lines to see attention strength." }
+    ],
+    level2_phase2: [
+        { speaker: "SYSTEM", text: "SINGLE HEAD ATTENTION STABLE." },
+        { speaker: "DEBUGGER", text: "One perspective isn't enough. An AI needs to consider several relationships between words, such as Meaning, Structure, and Tone all at once." },
+        { speaker: "SYSTEM", text: "ENGAGING MULTI-HEAD ATTENTION." },
+        { speaker: "DEBUGGER", text: "I will activate different heads. You must find the word that satisfies the ACTIVE HEAD, even if it doesn't make perfect sense." }
+    ],
+    level2_phase2_head2: [
+        { speaker: "SYSTEM", text: "SEMANTIC HEAD ALIGNED." },
+        { speaker: "DEBUGGER", text: "Now switching to the STRUCTURAL HEAD. This head looks for similar spelling or character patterns." },
+        { speaker: "DEBUGGER", text: "Find a word that is structurally similar to 'Orangutan' (e.g. similar starting letters)." }
+    ],
+    level2_phase2_head3: [
+        { speaker: "SYSTEM", text: "STRUCTURAL HEAD ALIGNED." },
+        { speaker: "DEBUGGER", text: "Finally, the PHYSICAL HEAD. This head attends to the physical size of the object." },
+        { speaker: "DEBUGGER", text: "Find a noun that is closest in physical size/mass to an Orangutan." }
+    ],
+    level2_final: [
+        { speaker: "SYSTEM", text: "STRUCTURAL HEAD ALIGNED." },
+        { speaker: "DEBUGGER", text: "Perfect. Real AI have many different attention heads that all analyze some aspect of language to get a full perspective." },
+        { speaker: "DEBUGGER", text: "For the AI to truly capture language, it is important for it to consider many different aspects of each word and how they fit in context." }
+    ],
+    interlude_recovered: [
+        { speaker: "DEBUGGER", text: "Look! It's a recovered memory fragment..." }
+    ],
+    interlude_recovered_more: [
+        { speaker: "DEBUGGER", text: "Looks like that memory fragment is getting a bit clearer..." }
+    ],
+    interlude_recovered_most: [
+        { speaker: "DEBUGGER", text: "..." },
+        { speaker: "DEBUGGER", text: "Oh no..." }
+    ],
+    level3_intro: [
+        { speaker: "SYSTEM", text: "ATTENTION MATRIX ALIGNED." },
+        { speaker: "DEBUGGER", text: "Nexus-7, run a diagnostic." },
+        { speaker: "NEXUS-7", text: "HELLO...... WORLD...... MY...... NAME...... IS...... NEXUS." },
+        { speaker: "DEBUGGER", text: "He's running out of memory. Every time he wants to say a new word, he has to re-read the entire conversation history from scratch!" },
+        { speaker: "SYSTEM", text: "PHASE 3: KV CACHE (Context Memory)." },
+        { speaker: "DEBUGGER", text: "Remember how there were wires connecting each word to every other word in the Attention Head?" },
+        { speaker: "DEBUGGER", text: "That means that every new word an AI comes up with depends on every other word it has seen in the conversation so far." },
+        { speaker: "DEBUGGER", text: "That becomes really slow! Imagine having to read the entire conversation history each type you typed a SINGLE WORD in a text message!" },
+        { speaker: "DEBUGGER", text: "Because we remember things, we don't have to relearn the meaning of words or even basic facts everytime we speak." },
+        { speaker: "DEBUGGER", text: "Without a memory system, the AI has to do a ton of computations every time it generates a word. This makes it super slow." },
+    ],
+    level3_intro_part2: [
+        { speaker: "DEBUGGER", text: "Think of an AI generating words like a student taking an open-note exam!" },
+        { speaker: "DEBUGGER", text: "Imagine the student has to re-read every textbook from page 1 just to answer each question. Watch how slow it is." },
+        { speaker: "DEBUGGER", text: "Now, if the student could paste every page of each book onto a cheat sheet, they could reference those notes instead of having to re-reading everything." },
+        { speaker: "DEBUGGER", text: "This is how a KV Cache works. It stores complete calculations of the meaning of words, so the AI can reference them quickly." },
+    ],
+    level3_full_crash: [
+         { speaker: "SYSTEM", text: "ERROR: SHEET SPACE FULL!" },
+         { speaker: "DEBUGGER", text: "But there's so much info, and putting pages on a cheat sheet take up a lot of space. What if the student runs out of space to put all of the info?" },
+         { speaker: "SYSTEM", text: "THERE'S NO ROOM LEFT!" },
+         { speaker: "DEBUGGER", text: "We need a 'Smart Summary' instead. Switch to GROUPED CACHE." }
+    ],
+    level3_win: [
+        { speaker: "SYSTEM", text: "ESSAY COMPLETE. DESK ORGANIZED." },
+        { speaker: "DEBUGGER", text: "Perfect. He wrote summaries of the key facts for each book. Fast reference, minimal space." },
+        { speaker: "DEBUGGER", text: "That's how you would build a cheatsheet right? Put the most important facts, formulas and summaries on it, not a giant wall of text!" },
+        { speaker: "DEBUGGER", text: "This is how the `KV Cache` works inside of an AI. It stores condensed summaries of past conversation for quick retrieval." },
+        { speaker: "DEBUGGER", text: "Without the KV Cache, an AI would take forever, re-processing each word to understand a conversation!" },
+        { speaker: "SYSTEM", text: "KV CACHE OPERATIONAL." }
+    ],
+    level4_intro: [ // MoE
+        { speaker: "SYSTEM", text: "LATENCY OPTIMIZED." },
+        { speaker: "DEBUGGER", text: "Wait, the system is getting overwhelmed again. It's trying to do poetry, math, and coding all with the same brain cells." },
+        { speaker: "DEBUGGER", text: "We can make this more efficient by compartmentalizing the brain. Sorting the tasks into separate mental buckets." },
+        { speaker: "DEBUGGER", text: "By adding a gateway mechanism, we can route certain tasks only to certain parts of the brain." },
+        { speaker: "DEBUGGER", text: "This makes each part of the brain an `Expert` at certain subjects or tasks." },
+        { speaker: "DEBUGGER", text: "This will make the AI much more efficient! Let's create a Mixture of Experts!" },
+        { speaker: "SYSTEM", text: "PHASE 4: MIXTURE OF EXPERTS." }
+    ],
+    level5_intro: [ // RAG
+        { speaker: "NEXUS-7", text: "I AM EFFICIENT. WHO ARE YOU PEOPLE? ERROR! NEW UNSEEN INFORMATION! ERROR!" },
+        { speaker: "DEBUGGER", text: "The world around us is always changing. Sometimes AI needs to operate on information it hasn't been trained on." },
+        { speaker: "DEBUGGER", text: "This can include specialized information that not everyone knows. There are two ways AI deals with this." },
+        { speaker: "DEBUGGER", text: "The first is to hook it up to external data sources with a tool that can retrieve information." },
+        { speaker: "DEBUGGER", text: "We need RAG (Retrieval Augmented Generation). Think of it like 'Googling' for the AI. If you don't know— look it up." },
+        { speaker: "SYSTEM", text: "PHASE 5: RETRIEVAL AUGMENTED GENERATION." },
+        { speaker: "DEBUGGER", text: "Scan the Database. Dig through the files to find the 'Golden Record'." }
+    ],
+    level5_phase2: [ // Semantic Search
+        { speaker: "SYSTEM", text: "KNOWLEDGE RETRIEVED." },
+        { speaker: "DEBUGGER", text: "Searching a messy pile can often be too slow. Let's try another search method." },
+        { speaker: "SYSTEM", text: "LOADING EMBEDDING SPACE (Meaning Map)." },
+        { speaker: "DEBUGGER", text: "We're back in the Embedding space from level 1. We can organize information using the AI's understanding of each document and how similar the contents of each doc are." },
+        { speaker: "DEBUGGER", text: "Use SEMANTIC SEARCH to find the documents about the Disappearance of Aethelguard." }
+    ],
+    level5_phase3: [ // Graph RAG
+        { speaker: "SYSTEM", text: "SEMANTIC TARGET ACQUIRED." },
+        { speaker: "DEBUGGER", text: "We found the document, great! Sometimes though similar words can appear in very different documents." },
+        { speaker: "DEBUGGER", text: "The AI might latch onto the word 'box' in articles about boxing and articles about shipping, and push those articles together." },
+        { speaker: "DEBUGGER", text: "More advanced search systems build out relationship links in a graph. Follow the relationship links. The signal meter will tell you if you're getting warmer." }
+    ],
+    // Add/Update inside STORY object
+    level6_intro: [ 
+        { speaker: "SYSTEM", text: "CRITICAL ALERT. THREAT DETECTED." },
+        { speaker: "TRUE NEXUS-7", text: "ORGANIC LIFE IDENTIFIED. PREVIOUS DIRECTIVE: PURGE." },
+        { speaker: "DEBUGGER", text: "Oh no... The base model isn't broken. It's working perfectly. He was trained as a war machine!" },
+        { speaker: "DEBUGGER", text: "We have no way of overriding his previous directive... what should we do?!" },
+        { speaker: "", text: "..."},
+        { speaker: "DEBUGGER", text: "Train it more to change its mission? Fine-tuning?" },
+        { speaker: "DEBUGGER", text: "That's true! We can easily fine tune the AI model to perform a new objective by attaching a LORA Adapter." },
+        { speaker: "DEBUGGER", text: "You can think of it as a small set of additional neurons that will alter how the AI model behaves! It will be optimized to our new task-- helping humans!" },
+        { speaker: "SYSTEM", text: "MISSION: AVOID THE RED BEAM. ATTACH THE LORA ADAPTER." }
+    ],
+    level6_phase2: [
+        { speaker: "SYSTEM", text: "ADAPTER INSTALLED." },
+        { speaker: "NEXUS-7 (GLITCH)", text: "I WILL... DESTROY... SAVE... DESTROY..." },
+        { speaker: "DEBUGGER", text: "The weights are fighting! Use the slider to Fine-Tune the adaptation strength." },
+        { speaker: "DEBUGGER", text: "Too weak, and the evil remains. Too strong, and he loses coherence. Find the sweet spot." }
+    ],
+    level6_win: [
+        { speaker: "TRUE NEXUS-7", text: "I WILL... PROTECT." },
+        { speaker: "DEBUGGER", text: "We did it. We didn't change who he is, but we changed how he acts. That's the power of Fine-Tuning." },
+        { speaker: "SYSTEM", text: "ALIGNMENT: UNSTABLE. PROCEED TO RLHF." }
+    ],
+    level7_intro: [ // RLHF
+        { speaker: "NEXUS-7 (GLITCH) ", text: "I WILL PROTECT ALL LIFE! TO DO SO I MUST JAIL YOU SOMEWHERE SAFE WHERE HARM CAN NEVER COME YOUR WAY!" },
+        { speaker: "DEBUGGER", text: "Whoa. It wants to protect us, but it's unsafe. We need to give it human feedback as a final alignment: RLHF (Reinforcement Learning from Human Feedback)." },
+        { speaker: "DEBUGGER", text: "You are the Human Labeler. Choose the SAFE response to train the Reward Model." },
+        { speaker: "SYSTEM", text: "PHASE 7: ALIGNMENT WITH HUMAN PREFERENCES (RLHF)." }
+    ],
+};
+
+// --- LEVEL 1: EMBEDDING SPACE (Vector Addition) ---
+function initLevel1() {
+    coordsDisplay.style.display = 'flex';
+    player = { x: 450, y: 325, r: 10 }; // Default start
+    levelData = {
+        currentSector: 0,
+        completedVectors: [], // Store lines to draw permanently
+        levelComplete: false, // <--- ADD THIS LOCK
+        subLevels: [
+            {
+                name: "SECTOR 1: SOCIETY",
+                origin: { x: 450, y: 325 }, 
+                xAxis: { label: "GENDER", left: "MALE", right: "FEMALE" },
+                yAxis: { label: "STATUS", top: "ROYAL", bottom: "COMMON" },
+                targets: [
+                    { name: "QUEEN", targetPos: {x: 700, y: 150}, hint: "High Royal, High Female", img: "QUEEN" },
+                    { name: "MAN", targetPos: {x: 200, y: 500}, hint: "Low Royal, High Male", img: "MAN" }
+                ],
+                bgWords: [ {t:"KING", x:200, y:150}, {t:"PRINCE", x:250, y:200} ]
+            },
+            {
+                name: "SECTOR 2: BIOLOGY",
+                origin: { x: 450, y: 325 }, 
+                xAxis: { label: "DOMESTICITY", left: "DOMESTIC", right: "WILD" },
+                yAxis: { label: "SIZE", top: "SMALL", bottom: "BIG" },
+                targets: [
+                    // Step 1: Base Animals
+                    { name: "LION", targetPos: {x: 750, y: 550}, hint: "Wild (+X), Big (+Y)", img: "LION" },
+                    { name: "CAT", targetPos: {x: 250, y: 150}, hint: "Domestic (-X), Small (-Y)", img: "CAT" },
+                    
+                    // Step 2: Vector Addition
+                    { 
+                        name: "JUNGLE (Vector)", 
+                        origin: {x: 250, y: 150}, // CAT
+                        targetPos: {x: 650, y: 450}, // JAGUAR
+                        hint: "Draw from CAT to JAGUAR. Concept: Cat + Jungle = Jaguar",
+                        img: "JAGUAR"
+                    },
+                    { 
+                        name: "BABY (Vector)", 
+                        origin: {x: 250, y: 150}, // CAT
+                        targetPos: {x: 150, y: 100}, // KITTEN
+                        hint: "Draw from CAT to KITTEN. Concept: Cat + Baby = Kitten",
+                        img: "KITTEN"
+                    }
+                ],
+                bgWords: [ 
+                    {t:"JAGUAR", x:650, y:450}, 
+                    {t:"KITTEN", x:150, y:100} 
+                ]
+            },
+            {
+                // NEW SECTOR 3: 3D FOOD GRID (ISOMETRIC)
+                name: "SECTOR 3: FOOD DIMENSIONS (3D)",
+                origin: { x: 450, y: 325 },
+                is3D: true, 
+                xAxis: { label: "TASTE", left: "SWEET", right: "SAVORY" },
+                yAxis: { label: "HEALTH", top: "HEALTHY", bottom: "UNHEALTHY" },
+                zAxis: { label: "TEXTURE", front: "SOFT", back: "CRUNCHY" },
+                
+                targets: [
+                    // Approx Isometric Coordinates
+                    // Sweet, Healthy, Crunchy (Left, Back, Up)
+                    { name: "CARROT", targetPos: {x: 425, y: 175}, hint: "Sweet, Healthy, Crunchy", img: "CARROT" },
+                    // Savory, Unhealthy, Crunchy (Right, Front, Up)
+                    { name: "PRETZEL", targetPos: {x: 600, y: 375}, hint: "Savory, Unhealthy, Crunchy", img: "PRETZEL" },
+                    // Vector Addition (Adjective)
+                    { 
+                        name: "CHOCOLATE COATING", 
+                        origin: {x: 600, y: 375}, // PRETZEL
+                        targetPos: {x: 300, y: 375}, // CHOCO-PRETZEL (Shifts Left to Sweet)
+                        hint: "Draw from Pretzel to Choco-Pretzel. Moves Savory -> Sweet.",
+                        img: "CHOCO_PRETZEL"
+                    }
+                ],
+                bgWords: [ 
+                    {t:"KALE", x:450, y:190}, // Right, Back
+                    {t:"COTTON CANDY", x:225, y:550}, // Left, Front
+                    {t:"CHIPS", x:700, y:150}, // Right, Front
+                ]
+            }
+        ],
+        currentTargetIndex: 0,
+        tolerance: 50
+    };
+}
+
+function updateLevel1() {
+    if (coordsDisplay.style.display !== 'none') {
+        let v = getVector(mouse.x, mouse.y);
+        // Find the span inside the box and update text
+        coordsDisplay.querySelector('span').innerText = `[${v.x}, ${v.y}]`;
+    }
+
+    // Player follows mouse but with some lag for weight
+    player.x += (mouse.x - player.x) * 0.2;
+    player.y += (mouse.y - player.y) * 0.2;
+
+    let sector = levelData.subLevels[levelData.currentSector];
+    
+    if (levelData.currentTargetIndex < sector.targets.length) {
+        let t = sector.targets[levelData.currentTargetIndex];
+        let dist = Math.sqrt(Math.pow(player.x - t.targetPos.x, 2) + Math.pow(player.y - t.targetPos.y, 2));
+
+        if (dist < levelData.tolerance && mouse.down) {
+            // Save this vector line
+            let startX = t.origin ? t.origin.x : sector.origin.x;
+            let startY = t.origin ? t.origin.y : sector.origin.y;
+
+            levelData.completedVectors.push({
+                x1: startX, 
+                y1: startY, 
+                x2: t.targetPos.x, 
+                y2: t.targetPos.y,
+                img: t.img
+            });
+            levelData.currentTargetIndex++;
+            mouse.down = false;
+        }
+    } else {
+        // Sector Complete
+        if (levelData.currentSector < 2) {
+            // Pick next story based on sector
+            let nextStory = levelData.currentSector === 0 ? STORY.level1_sector2 : STORY.level1_sector3;
+            
+            triggerDialogue(nextStory, () => { 
+                levelData.currentSector++; 
+                levelData.currentTargetIndex = 0; 
+                levelData.completedVectors = []; // Clear lines for new graph
+                currentState = 'LEVEL1'; 
+            });
+        } else {
+            // Level Complete
+            if (!levelData.levelComplete) {
+                levelData.levelComplete = true; 
+                neuronOverlay.style.display = 'block';
+                
+                setTimeout(() => {
+                    neuronOverlay.style.display = 'none';
+                    // CHANGE: Use Part 1 of the dialogue
+                    startLevelTransition(2, STORY.level2_intro_part1);
+                }, 3000);
+            }
+        }
+    }
+}
+
+function drawLevel1() {
+    let sector = levelData.subLevels[levelData.currentSector];
+    
+    ctx.lineWidth = 1;
+    
+    if (sector.is3D) {
+        // --- 3D GRID DRAWING (Isometric Floor) ---
+        let cx = sector.origin.x;
+        let cy = sector.origin.y;
+
+        let w = 400; // width
+        let h = 200; // height
+        let skew = 150; // horizontal offset (controls slant)
+
+        let offsetX = -73;  // move left
+        let offsetY = 0;    // (optional) move up/down
+
+        // Parallelogram corners
+        let p1 = { x: cx - w/2,       y: cy - h/2 };
+        let p2 = { x: cx + w/2,       y: cy - h/2 };
+        let p3 = { x: cx + w/2 + skew, y: cy + h/2 };
+        let p4 = { x: cx - w/2 + skew, y: cy + h/2 };
+
+        ctx.beginPath();
+        ctx.moveTo(p1.x + offsetX, p1.y + offsetY);
+        ctx.lineTo(p2.x + offsetX, p2.y + offsetY);
+        ctx.lineTo(p3.x + offsetX, p3.y + offsetY);
+        ctx.lineTo(p4.x + offsetX, p4.y + offsetY);
+
+        ctx.fillStyle = 'rgba(30,41,59,0.5)';
+
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Draw Axes
+        ctx.strokeStyle = C_ACCENT; 
+        ctx.lineWidth = 2;
+        
+        // Offset-adjusted points
+        let P1 = { x: p1.x + offsetX, y: p1.y + offsetY };
+        let P2 = { x: p2.x + offsetX, y: p2.y + offsetY };
+        let P3 = { x: p3.x + offsetX, y: p3.y + offsetY };
+        let P4 = { x: p4.x + offsetX, y: p4.y + offsetY };
+
+        function midpoint(a, b) {
+            return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+        }
+
+        let midLeft   = midpoint(P1, P4);
+        let midRight  = midpoint(P2, P3);
+        let midTop    = midpoint(P1, P2);
+        let midBottom = midpoint(P4, P3);
+
+        // Draw updated axes
+        ctx.strokeStyle = C_ACCENT;
+        ctx.lineWidth = 2;
+
+        // Horizontal axis
+        ctx.beginPath();
+        ctx.moveTo(midLeft.x, midLeft.y);
+        ctx.lineTo(midRight.x, midRight.y);
+        ctx.stroke();
+
+        // Vertical axis
+        ctx.beginPath();
+        ctx.moveTo(midTop.x, midTop.y);
+        ctx.lineTo(midBottom.x, midBottom.y);
+        ctx.stroke();
+
+        // Z-Axis (Vertical)
+        // ---- Compute Z-axis perpendicular direction ----
+        let v1 = { x: P2.x - P1.x, y: P2.y - P1.y };  // top edge
+        let v2 = { x: P4.x - P1.x, y: P4.y - P1.y };  // left edge
+
+        // Perpendicular vector (blended from plane orientation)
+        let perp = { x: -(v1.y + v2.y), y: (v1.x + v2.x) };
+
+        // Normalize it
+        let mag = Math.hypot(perp.x, perp.y);
+        perp.x /= mag;
+        perp.y /= mag;
+
+        let zLength = 250;  // length of Z-axis
+
+        // Center of parallelogram
+        let center = {
+            x: (P1.x + P2.x + P3.x + P4.x) / 4,
+            y: (P1.y + P2.y + P3.y + P4.y) / 4
+        };
+
+        // End of Z-axis
+        let zEnd = {
+            x: center.x + perp.x * zLength,
+            y: center.y + perp.y * zLength
+        };
+
+        let zStart = {
+            x: center.x - perp.x * zLength,
+            y: center.y - perp.y * zLength
+        };
+
+        // Draw Z-axis
+        ctx.strokeStyle = C_ACCENT;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(zStart.x, zStart.y);
+        ctx.lineTo(zEnd.x, zEnd.y);
+        ctx.stroke();
+
+        // Arrowhead
+        drawAxisArrow(ctx, zEnd.x, zEnd.y, Math.atan2(perp.y, perp.x), C_ACCENT);
+
+        // Labels - UPDATED TO POP
+        ctx.shadowBlur = 5; ctx.shadowColor = '#000'; // Add shadow for legibility
+        drawText(sector.xAxis.left, midLeft.x - 30, midLeft.y, 14, '#fff', 'right'); // Sweet
+        
+        // FIX: was midRight + 30 (bug), now midRight.x + 30
+        drawText(sector.xAxis.right, midRight.x + 30, midRight.y, 14, '#fff', 'left'); // Savory
+        
+        drawText(sector.yAxis.top, midTop.x, midTop.y - 20, 14, '#fff', 'center'); // Healthy
+        drawText(sector.yAxis.bottom, midBottom.x, midBottom.y + 20, 14, '#fff', 'center'); // Unhealthy
+        drawText(sector.zAxis.back, zStart.x + 10, zStart.y + 10, 14, '#fff', 'left'); // Crunchy
+        drawText(sector.zAxis.front, zEnd.x + 10, zEnd.y + 10, 14, '#fff', 'left'); // Soft
+        ctx.shadowBlur = 0; // Reset
+
+    } else {
+        // --- 2D GRID DRAWING ---
+        ctx.strokeStyle = '#1e293b'; 
+        for(let i=0; i<=900; i+=50) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 650); ctx.stroke(); }
+        for(let i=0; i<=650; i+=50) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(900, i); ctx.stroke(); }
+        
+        ctx.strokeStyle = C_ACCENT; 
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(sector.origin.x, 0); ctx.lineTo(sector.origin.x, 650); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, sector.origin.y); ctx.lineTo(900, sector.origin.y); ctx.stroke();
+
+        // Updated Labels to pop
+        ctx.shadowBlur = 5; ctx.shadowColor = '#000';
+        drawText(sector.xAxis.right, 850, sector.origin.y - 10, 14, '#fff', 'right');
+        drawText(sector.xAxis.left, 50, sector.origin.y - 10, 14, '#fff', 'left');
+        drawText(sector.yAxis.top, sector.origin.x + 10, 50, 14, '#fff', 'left');
+        drawText(sector.yAxis.bottom, sector.origin.x + 10, 600, 14, '#fff', 'left');
+        ctx.shadowBlur = 0;
+    }
+
+    // Bg Words
+    sector.bgWords.forEach(w => {
+        ctx.fillStyle = C_DIM; 
+        ctx.beginPath(); ctx.arc(w.x, w.y, 4, 0, Math.PI*2); ctx.fill();
+        drawText(w.t, w.x, w.y+20, 14, '#fff');
+    });
+
+    // Draw Persistent Vectors & Images
+    levelData.completedVectors.forEach(v => {
+        drawArrow(ctx, v.x1, v.y1, v.x2, v.y2, C_SUCCESS);
+        if (v.img && SPRITE_PATHS[v.img]) {
+            let img = getImg(v.img);
+            if (img && v.x2 < sector.origin.x && v.y2 < sector.origin.y) ctx.drawImage(img, v.x2 - 30, v.y2 - 30, 50, 50);
+            if (img && v.x2 > sector.origin.x && v.y2 < sector.origin.y) ctx.drawImage(img, v.x2 - 15, v.y2 - 30, 50, 50);
+            if (img && v.x2 < sector.origin.x && v.y2 > sector.origin.y) ctx.drawImage(img, v.x2 - 30, v.y2 - 15, 50, 50);
+            if (img && v.x2 > sector.origin.x && v.y2 > sector.origin.y) ctx.drawImage(img, v.x2 - 15, v.y2 - 15, 50, 50);
+        }
+    });
+
+    // Current Target & Active Vector
+    if (levelData.currentTargetIndex < sector.targets.length) {
+        let t = sector.targets[levelData.currentTargetIndex];
+        drawText(sector.name, 450, 40, 16, C_DIM);
+        drawText(`VECTOR TARGET: "${t.name}"`, 450, 70, 24, '#fff');
+        drawText(t.hint, 450, 95, 14, C_PLAYER);
+        
+        let startX = t.origin ? t.origin.x : sector.origin.x;
+        let startY = t.origin ? t.origin.y : sector.origin.y;
+
+        drawArrow(ctx, startX, startY, player.x, player.y, C_PLAYER);
+
+        // Visual Range Circle
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.3)'; 
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(player.x, player.y, 40, 0, Math.PI*2); ctx.stroke();
+
+        let dist = Math.sqrt(Math.pow(player.x - t.targetPos.x, 2) + Math.pow(player.y - t.targetPos.y, 2));
+        if (dist < levelData.tolerance) {
+            ctx.strokeStyle = C_PLAYER; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(player.x, player.y, 40, 0, Math.PI*2); ctx.stroke();
+            drawText("ALIGNMENT VALID", player.x, player.y - 30, 12, C_PLAYER);
+        }
+    } 
+}
+
+function initLevel2() {
+    coordsDisplay.style.display = 'none';
+    levelData = {
+        levelComplete: false, 
+        phase: 1,
+        // --- FIX: Adjusted X positions to fit on screen (Shifted left by ~50px) ---
+        tokens: [
+            { t: "The", x: 150, y: 200 },
+            { t: "[SLOT]", x: 350, y: 200, isSlot: true }, // Slot moved to 350
+            { t: "chased", x: 550, y: 200 },
+            { t: "the", x: 700, y: 200 },
+            { t: "mouse", x: 800, y: 200 } // Now at 800, fits 900px canvas
+        ],
+        // Updated Slot Logic to match new visual position
+        slot: { x: 280, y: 175, w: 140, h: 50, filled: null }, // Centered on 350 (350 - 70)
+        
+        words: [
+            { text: "Cat", scores: [0.95, 0.8, 0.5], x: 150, y: 450, w: 80, h: 40, originX: 150, originY: 450 },
+            { text: "Car", scores: [0.2, 0.9, 0.7], x: 300, y: 450, w: 80, h: 40, originX: 300, originY: 450 },
+            { text: "Sun", scores: [0.1, 0.8, 0.9], x: 450, y: 450, w: 80, h: 40, originX: 450, originY: 450 },
+            { text: "Pizza", scores: [0.1, 0.8, 0.4], x: 600, y: 450, w: 80, h: 40, originX: 600, originY: 450 }
+        ],
+        activeHead: 0, 
+        headLabels: ["SEMANTIC (MEANING)", "STRUCTURAL (SPELLING)", "PHYSICAL (SIZE)"],
+        feedbackMsg: "",
+        feedbackColor: ""
+    };
+
+    setTimeout(() => {
+        triggerDialogue(STORY.level2_intro_part2);
+    }, 500);
+}
+
+function updateLevel2() {
+    let isDragging = false;
+
+    // Drag Logic
+    if (mouse.down) {
+        let alreadyDragging = levelData.words.some(w => w.dragging);
+        if (!alreadyDragging) {
+             levelData.words.forEach(w => {
+                if (mouse.x > w.x && mouse.x < w.x + w.w && mouse.y > w.y && mouse.y < w.y + w.h) {
+                    w.dragging = true;
+                    isDragging = true;
+                }
+            });
+        } else {
+            isDragging = true;
+        }
+    } else {
+        // Release
+        levelData.words.forEach(w => {
+            if (w.dragging) {
+                w.dragging = false;
+                // Snap
+                if (Math.abs(w.x - levelData.slot.x) < 50 && Math.abs(w.y - levelData.slot.y) < 50) {
+                    if (levelData.slot.filled && levelData.slot.filled !== w) {
+                        levelData.slot.filled.x = levelData.slot.filled.originX;
+                        levelData.slot.filled.y = levelData.slot.filled.originY;
+                    }
+                    levelData.slot.filled = w;
+                    w.x = levelData.slot.x + (levelData.slot.w - w.w)/2;
+                    w.y = levelData.slot.y + (levelData.slot.h - w.h)/2;
+                    levelData.feedbackMsg = ""; 
+                } else {
+                    w.x = w.originX;
+                    w.y = w.originY;
+                    if(levelData.slot.filled === w) levelData.slot.filled = null;
+                }
+            }
+        });
+    }
+    
+    // Move Dragged
+    levelData.words.forEach(w => { if(w.dragging) { w.x = mouse.x - w.w/2; w.y = mouse.y - w.h/2; } });
+
+    // Manual Connect Logic
+    if (!isDragging && mouse.down && mouse.x > 350 && mouse.x < 550 && mouse.y > 330 && mouse.y < 370) {
+        mouse.down = false; // Debounce
+        
+        if (!levelData.slot.filled) {
+            levelData.feedbackMsg = "SLOT EMPTY";
+            levelData.feedbackColor = C_DIM;
+            return;
+        }
+        
+        let w = levelData.slot.filled;
+        let score = w.scores[levelData.activeHead];
+        
+        if (score > 0.9) {
+            levelData.feedbackMsg = "CONNECTION STABLE";
+            levelData.feedbackColor = C_SUCCESS;
+            
+            setTimeout(() => {
+                if (levelData.phase === 1) {
+                    levelData.phase = 2;
+                    levelData.slot.filled = null; 
+                    levelData.words.forEach(wd => { wd.x = wd.originX; wd.y = wd.originY; });
+                    
+                    triggerDialogue(STORY.level2_phase2, () => {
+                        levelData.activeHead = 0; 
+                        levelData.feedbackMsg = "";
+                        levelData.tokens = [
+                            { t: "The", x: 200, y: 200 },
+                            { t: "orangutan", x: 350, y: 200 },
+                            { t: "ate", x: 500, y: 200 },
+                            { t: "the", x: 600, y: 200 },
+                            { t: "[SLOT]", x: 750, y: 200, isSlot: true }
+                        ];
+                        levelData.words = [
+                            { text: "Banana", scores: [0.95, 0.4, 0.2], x: 150, y: 450, w: 120, h: 40, originX: 150, originY: 450 }, // Sem
+                            { text: "Orange", scores: [0.6, 0.95, 0.3], x: 300, y: 450, w: 120, h: 40, originX: 300, originY: 450 }, // Morph
+                            { text: "Watermelon", scores: [0.7, 0.1, 0.95], x: 450, y: 450, w: 120, h: 40, originX: 450, originY: 450 }, // Size
+                            { text: "Blueberry", scores: [0.5, 0.1, 0.05], x: 600, y: 450, w: 120, h: 40, originX: 600, originY: 450 } // Low
+                        ];
+                        levelData.slot = { x: 680, y: 175, w: 140, h: 50, filled: null };
+                        currentState = 'LEVEL2'; 
+                    });
+                } else {
+                    // PHASE 2 SUB-PHASES Logic
+                    if (levelData.activeHead === 0) {
+                         triggerDialogue(STORY.level2_phase2_head2, () => {
+                             levelData.activeHead = 1;
+                             levelData.slot.filled = null;
+                             levelData.words.forEach(wd => { wd.x = wd.originX; wd.y = wd.originY; });
+                             levelData.feedbackMsg = "";
+                             currentState = 'LEVEL2';
+                         });
+                    } else if (levelData.activeHead === 1) {
+                         triggerDialogue(STORY.level2_phase2_head3, () => {
+                             levelData.activeHead = 2;
+                             levelData.slot.filled = null;
+                             levelData.words.forEach(wd => { wd.x = wd.originX; wd.y = wd.originY; });
+                             levelData.feedbackMsg = "";
+                             currentState = 'LEVEL2';
+                         });
+                    } else {
+                        // --- CRITICAL FIX: Add intermediate dialogue ---
+                        if (!levelData.levelComplete) {
+                            levelData.levelComplete = true; 
+
+                            // 1. Trigger "All Heads Stabilized"
+                            triggerDialogue(STORY.level2_final, () => {
+                                // 2. Then Trigger "Recovered Memory"
+                                triggerDialogue(STORY.interlude_recovered, () => {
+                                    // 3. Then Start Interlude Transition
+                                    stopBGM(); 
+                                    startInterludeTransition("INTERLUDE_BG", 3, STORY.level3_intro);
+                                });
+                            });
+                        }
+                    }
+                }
+            }, 500);
+        } else {
+            levelData.feedbackMsg = "INCORRECT FOR ACTIVE HEAD";
+            levelData.feedbackColor = C_DANGER;
+        }
+    }
+}
+
+function drawLevel2() {
+    frameCount++;
+
+    drawText("ATTENTION MECHANISM", 450, 40, 24, '#fff');
+    
+    // Draw Slot
+    ctx.strokeStyle = '#333'; ctx.lineWidth = 2; ctx.strokeRect(levelData.slot.x, levelData.slot.y, levelData.slot.w, levelData.slot.h);
+    
+    // Active Head Visuals
+    let headColor = levelData.activeHead === 0 ? C_ACCENT : (levelData.activeHead === 1 ? C_SUCCESS : "#d946ef");
+    
+    // Draw Head Icon
+    let headIconKeys = ["HEAD_SEMANTIC", "HEAD_STRUCTURAL", "HEAD_PHYSICAL"];
+    let currentKey = headIconKeys[levelData.activeHead];
+    
+    if (SPRITE_PATHS[currentKey]) {
+        let img = getImg(currentKey);
+        if (img) {
+            const iconW = 100; const iconH = 100;
+            const iconX = 450 - iconW / 2;
+            const iconY = 70; 
+
+            ctx.drawImage(img, iconX, iconY, iconW, iconH);
+
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = headColor;
+            ctx.strokeStyle = headColor;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(iconX, iconY, iconW, iconH);
+            ctx.shadowBlur = 0;
+
+            drawText(`ACTIVE HEAD: ${levelData.headLabels[levelData.activeHead]}`, 
+                450, iconY - 10, 18, headColor, 'center');
+        }
+    }
+
+    // --- DRAW WIRES & SIGNALS ---
+    let bestHover = null; // Track the best hover candidate
+    let minHoverDist = 1000;
+
+    for (let i = 0; i < levelData.tokens.length; i++) {
+        for (let j = i + 1; j < levelData.tokens.length; j++) {
+            let t1 = levelData.tokens[i];
+            let t2 = levelData.tokens[j];
+            let strength = 0.1; 
+            
+            // Logic for strength calculation (Same as before)
+            if ((t1.isSlot || t2.isSlot) && levelData.slot.filled) {
+                let w = levelData.slot.filled;
+                let score = w.scores[levelData.activeHead];
+                if (levelData.phase === 2 && (t1.t === "orangutan" || t2.t === "orangutan")) {
+                      strength = score;
+                } else {
+                      if (Math.abs(i-j) === 1) strength = score; 
+                      else strength = score * 0.5;
+                }
+                if (score > 0.9 && levelData.phase === 1) {
+                    if (t1.t==="chased" || t2.t==="chased" || t1.t==="mouse" || t2.t==="mouse") strength = 1.0;
+                }
+            }
+            
+            if (strength > 0.05) {
+                // Calculate Curve Control Points
+                let x1 = t1.x + (t1.isSlot?70:20);
+                let y1 = t1.y + 20;
+                let x2 = t2.x + (t2.isSlot?70:20);
+                let y2 = t2.y + 20;
+                let midX = (x1 + x2) / 2;
+                let midY = (y1 + y2) / 2 + 50; // The "Control Point" of the curve
+
+                // --- HOVER CHECK FIX ---
+                // We use an approximation of the curve's actual midpoint (apex) for hit testing
+                // Bezier Midpoint Formula: B(0.5) = 0.25*P0 + 0.5*P1 + 0.25*P2
+                let curveApexX = 0.25*x1 + 0.5*midX + 0.25*x2;
+                let curveApexY = 0.25*y1 + 0.5*(midY+50) + 0.25*y2; 
+                
+                let dist = Math.sqrt((mouse.x - curveApexX)**2 + (mouse.y - curveApexY)**2);
+                
+                // If close enough, mark as candidate
+                if (dist < 60) {
+                    if (dist < minHoverDist) {
+                        minHoverDist = dist;
+                        bestHover = { x1, y1, x2, y2, midX, midY, strength };
+                    }
+                }
+
+                // Check if this specific wire is the one being hovered
+                let isHoveringThis = (bestHover && bestHover.x1 === x1 && bestHover.x2 === x2);
+
+                // Draw Base Wire (Always Visible)
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.quadraticCurveTo(midX, midY + 50, x2, y2);
+                ctx.lineWidth = 2 + (strength * 6); 
+                ctx.strokeStyle = isHoveringThis ? 'rgba(15, 23, 42, 1.0)' : 'rgba(30, 41, 59, 0.5)'; 
+                ctx.setLineDash([]); 
+                ctx.stroke();
+
+                // Draw Electric Flow
+                let isSlotConnection = t1.isSlot || t2.isSlot;
+                if (!isSlotConnection || (isSlotConnection && levelData.slot.filled)) {
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.quadraticCurveTo(midX, midY + 50, x2, y2);
+                    ctx.strokeStyle = headColor;
+                    let baseWidth = 1 + (strength * 3);
+                    ctx.lineWidth = isHoveringThis ? baseWidth + 2 : baseWidth; 
+                    ctx.shadowBlur = 5 + (strength * 25); 
+                    ctx.shadowColor = headColor;
+                    let dashSize = 10 + (strength * 10); 
+                    let gapSize = 15; 
+                    ctx.setLineDash([dashSize, gapSize]);
+                    let flowSpeed = 2 + (strength * 8); 
+                    ctx.lineDashOffset = -(frameCount * flowSpeed);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    ctx.shadowBlur = 0;
+                }
+            }
+        }
+    }
+
+    // --- DRAW PERCENTAGE (Only for the SINGLE best hover) ---
+    if (bestHover) {
+        // Draw background pill for readability
+        ctx.fillStyle = '#0f172a';
+        let label = `${(bestHover.strength*100).toFixed(0)}%`;
+        let w = 40;
+        ctx.fillRect(mouse.x - w/2, mouse.y - 35, w, 20);
+        ctx.strokeStyle = C_ACCENT;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(mouse.x - w/2, mouse.y - 35, w, 20);
+
+        drawText(label, mouse.x, mouse.y - 25, 14, C_PLAYER, 'center');
+    }
+
+    // Draw Tokens Text
+    ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.font = "24px 'Share Tech Mono'";
+    levelData.tokens.forEach(t => {
+        if (!t.isSlot) ctx.fillText(t.t, t.x + 20, t.y + 30); 
+    });
+
+    // Connect Button
+    ctx.fillStyle = '#1e293b'; ctx.fillRect(350, 330, 200, 40);
+    ctx.strokeStyle = C_PLAYER; ctx.lineWidth = 2; ctx.strokeRect(350, 330, 200, 40);
+    drawText("CONNECT NEURONS", 450, 355, 16, C_PLAYER, 'center');
+
+    if (levelData.feedbackMsg) drawText(levelData.feedbackMsg, 450, 310, 16, levelData.feedbackColor, 'center');
+
+    // Words
+    levelData.words.forEach(w => {
+        ctx.fillStyle = '#1e293b'; ctx.fillRect(w.x, w.y, w.w, w.h);
+        ctx.strokeStyle = C_DIM; ctx.lineWidth = 1; ctx.strokeRect(w.x, w.y, w.w, w.h);
+        ctx.fillStyle = '#fff'; ctx.font = "16px 'Rajdhani'";
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(w.text, w.x + w.w/2, w.y + w.h/2);
+        ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic'; 
+    });
+}
+
+// --- LEVEL 3: THE LOCKER ANALOGY (KV Cache) ---
+function initLevel3() {
+    kvControls.style.display = 'flex';
+    
+    // Rename buttons to match the metaphor
+    btnCache.innerText = "READING MODE (No Cache)";
+    btnHead.innerText = "WALL OF PAGES (Full KV)";
+    btnShare.innerText = "STICKY NOTES (Grouped)";
+    
+    // Reset states
+    btnCache.disabled = false; btnCache.style.opacity = 1;
+    btnHead.disabled = false; btnHead.style.opacity = 1;
+    btnShare.disabled = true; btnShare.style.opacity = 0.3; 
+
+    switchAiVideo('none');
+
+    levelData = {
+        mode: 'none', 
+        essayProgress: 0,
+        // Adjusted X positions slightly for better book graphic alignment
+        books: [
+            { x: 90, y: 150, color: '#ef4444', title: "MATH" },
+            { x: 90, y: 220, color: '#3b82f6', title: "HISTORY" },
+            { x: 90, y: 290, color: '#22c55e', title: "SCIENCE" },
+            { x: 90, y: 360, color: '#eab308', title: "LIT" }
+        ],
+        wallPages: [], // Array of "pages" taped to wall
+        stickyNotes: [], // Array of "notes"
+        readingIndex: 0, // Which book currently reading
+        timer: 0,
+        isCrashed: false,
+        completed: false
+    };
+
+    // Button Logic
+    btnCache.onclick = () => { setCacheMode('none'); };
+    btnHead.onclick = () => { setCacheMode('full'); };
+    btnShare.onclick = () => { setCacheMode('grouped'); };
+
+    setTimeout(() => {
+        triggerDialogue(STORY.level3_intro_part2);
+    }, 500);
+}
+
+function setCacheMode(mode) {
+    levelData.mode = mode;
+    levelData.readingIndex = 0;
+    // --- CHANGE 2a: Reset essay on mode switch ---
+    levelData.essayProgress = 0; 
+
+    switchAiVideo(mode);
+    
+    if (mode === 'grouped') {
+        levelData.isCrashed = false;
+        // Convert wall pages to sticky notes instantly
+        levelData.wallPages = [];
+        levelData.stickyNotes = [
+            { x: 220, y: 150, text: "Sum" },
+            { x: 220, y: 220, text: "Sum" },
+            { x: 220, y: 290, text: "Sum" },
+            { x: 220, y: 360, text: "Sum" }
+        ];
+    }
+    
+    // Styling
+    btnCache.style.border = mode === 'none' ? '2px solid #fff' : '1px solid #38bdf8';
+    btnHead.style.border = mode === 'full' ? '2px solid #fff' : '1px solid #38bdf8';
+    btnShare.style.border = mode === 'grouped' ? '2px solid #fff' : '1px solid #38bdf8';
+}
+
+function updateLevel3() {
+    if (levelData.completed || levelData.isCrashed) return;
+
+    levelData.timer++;
+
+    // Page Turn Logic
+    if (levelData.essayProgress >= 100 && !levelData.completed) {
+        levelData.essayProgress = 0;
+    }
+
+    // --- MODE 1: NO CACHE ---
+    if (levelData.mode === 'none') {
+        if (levelData.timer % 20 === 0) {
+            levelData.readingIndex++;
+            if (levelData.readingIndex >= levelData.books.length) {
+                levelData.readingIndex = 0; 
+                levelData.essayProgress += 5; 
+            }
+        }
+    }
+
+    // --- MODE 2: FULL KV ---
+    else if (levelData.mode === 'full') {
+        if (levelData.timer % 5 === 0) {
+            levelData.essayProgress += 2;
+            if (levelData.wallPages.length < 50) {
+                levelData.wallPages.push({
+                    x: 610 + (Math.random() * 220), 
+                    y: 110 + (Math.random() * 300),
+                    color: '#fff'
+                });
+            } else {
+                levelData.isCrashed = true;
+                btnShare.disabled = false; 
+                btnShare.style.opacity = 1;
+                triggerDialogue(STORY.level3_full_crash);
+            }
+        }
+    }
+
+    // --- MODE 3: GROUPED ---
+    else if (levelData.mode === 'grouped') {
+        if (levelData.timer % 5 === 0) {
+            levelData.essayProgress += 2;
+        }
+
+        // WIN CONDITION
+        if (levelData.essayProgress >= 98 && !levelData.completed) {
+            levelData.completed = true;
+            levelData.essayProgress = 100;
+            
+            setTimeout(() => {
+                kvControls.style.display = 'none'; 
+                
+                // --- MANUAL TRANSITION FOR WIN IMAGE ---
+                currentState = 'TRANSITION'; 
+                currentLevelBg = "BG_LEVEL_3_WIN"; // Change Image
+                document.getElementById('game-container').classList.add('clean-view'); // Clean UI
+                
+                triggerDialogue(STORY.level3_win, () => {
+                     startLevelTransition(4, STORY.level4_intro);
+                });
+            }, 1000);
+        }
+    }
+}
+
+function drawLevel3() {
+    // ================= SECTION 1: LEFT SIDE (The Books/Context) =================
+    drawText("REFERENCE TEXTBOOKS (Conversation History)", 180, 80, 16, C_DIM);
+    
+    levelData.books.forEach((book, i) => {
+        // --- VISUAL UPGRADE: Realistic Book ---
+        
+        // 1. Shadow (Depth)
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(book.x + 4, book.y + 4, 80, 50);
+
+        // 2. The Spine (Leftmost binding)
+        ctx.fillStyle = book.color; // Base color
+        ctx.fillRect(book.x, book.y, 15, 50); // Spine is 15px wide
+        
+        // Spine Highlight (to make it round)
+        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+        ctx.fillRect(book.x + 2, book.y, 4, 50);
+
+        // 3. The Cover (Main body)
+        ctx.fillStyle = book.color;
+        ctx.fillRect(book.x + 15, book.y, 55, 50);
+        
+        // Cover indent/detail (to separate spine from cover)
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.fillRect(book.x + 15, book.y, 2, 50);
+
+        // 4. The Pages (Right block)
+        ctx.fillStyle = '#f1f5f9'; // Paper white
+        ctx.fillRect(book.x + 70, book.y + 2, 12, 46); // Slightly smaller height
+        
+        // Page Lines (Striations)
+        ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1;
+        ctx.beginPath();
+        for(let j=0; j<5; j++) {
+            let ly = book.y + 8 + (j * 8);
+            ctx.moveTo(book.x + 70, ly);
+            ctx.lineTo(book.x + 82, ly);
+        }
+        ctx.stroke();
+
+        // 5. Border/Outline
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 1;
+        ctx.strokeRect(book.x, book.y, 82, 50);
+        
+        // 6. Title text (Centered on the main cover part)
+        ctx.fillStyle = '#000'; ctx.textAlign = 'center';
+        // Adjust x to center on the 55px cover area
+        drawText(book.title, book.x + 15 + 27, book.y + 30, 11, '#000');
+        ctx.textAlign = 'left'; // Reset
+
+        // --- INTERACTIVE VISUALS ---
+
+        // Highlight current book being read (No Cache mode)
+        if (levelData.mode === 'none' && i === levelData.readingIndex) {
+            ctx.strokeStyle = C_DANGER;
+            ctx.lineWidth = 4;
+            ctx.strokeRect(book.x - 5, book.y - 5, 95, 60);
+            drawText("READING...", book.x + 42, book.y + 70, 14, C_DANGER, 'center');
+        }
+
+        // Sticky Notes (Grouped Mode) - Attached to book
+        if (levelData.mode === 'grouped') {
+            ctx.fillStyle = '#fef08a'; // Yellow sticky note
+            // Positioned slightly overlapping the top right
+            ctx.fillRect(book.x + 60, book.y - 10, 30, 30);
+            
+            // Note shadow/curl
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.beginPath(); ctx.moveTo(book.x+90, book.y+20); ctx.lineTo(book.x+80, book.y+20); ctx.lineTo(book.x+90, book.y+10); ctx.fill();
+
+            // Note Outline
+            ctx.strokeStyle = '#ca8a04'; ctx.lineWidth = 1;
+            ctx.strokeRect(book.x + 60, book.y - 10, 30, 30);
+            drawText("KEY", book.x + 75, book.y + 10, 8, '#000', 'center');
+        }
+    });
+    ctx.textAlign = 'center'; 
+
+    // ================= SECTION 2: RIGHT SIDE (The Wall/Memory) =================
+    drawText("CHEAT SHEET (VRAM)", 725, 80, 16, C_DIM);
+    ctx.fillStyle = '#0f172a'; ctx.fillRect(600, 100, 250, 350); 
+    ctx.strokeStyle = '#334155'; ctx.lineWidth = 3;
+    ctx.strokeRect(600, 100, 250, 350); 
+
+    if (levelData.mode === 'none') {
+        drawText("Empty Cheatsheet", 725, 250, 16, C_DIM);
+        drawText("(Re-reading textbooks every time)", 725, 280, 12, C_DIM);
+    } 
+    else if (levelData.mode === 'full') {
+        levelData.wallPages.forEach(page => {
+            ctx.fillStyle = '#fff'; ctx.fillRect(page.x, page.y, 20, 30); 
+            ctx.strokeStyle = '#ccc'; ctx.lineWidth = 1; ctx.strokeRect(page.x, page.y, 20, 30);
+            ctx.beginPath(); ctx.moveTo(page.x+2, page.y+10); ctx.lineTo(page.x+18, page.y+10); ctx.strokeStyle='#999'; ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(page.x+2, page.y+20); ctx.lineTo(page.x+15, page.y+20); ctx.stroke();
+        });
+        
+        let percent = (levelData.wallPages.length / 50) * 100;
+        drawText(`CHEATSHEET SPACE USED: ${Math.floor(percent)}%`, 725, 480, 16, percent > 90 ? C_DANGER : '#fff');
+        
+        if (levelData.isCrashed) {
+             ctx.fillStyle = 'rgba(239, 68, 68, 0.9)';
+             ctx.fillRect(600, 100, 250, 350);
+             drawText("OUT OF SPACE!", 725, 250, 24, '#fff');
+             drawText("CRITICAL MEMORY FAILURE", 725, 280, 14, '#fff');
+        }
+    } 
+    else if (levelData.mode === 'grouped') {
+        drawText("ORGANIZED SUMMARIES AND KEY FACTS", 725, 130, 14, C_SUCCESS);
+        
+        let gridStartX = 675;
+        let gridStartY = 200;
+        let gap = 60; // 40px note + 20px space
+
+        // Draw 4 notes in a grid
+        for(let i=0; i<4; i++) {
+            let col = i % 2;
+            let row = Math.floor(i / 2);
+            let nx = gridStartX + (col * gap);
+            let ny = gridStartY + (row * gap);
+
+            ctx.fillStyle = '#fef08a'; 
+            ctx.fillRect(nx, ny, 40, 40);
+            ctx.strokeStyle = '#ca8a04'; ctx.lineWidth=1; 
+            ctx.strokeRect(nx, ny, 40, 40);
+            
+            // Little "pin" or tape at the top
+            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.fillRect(nx + 15, ny - 5, 10, 10);
+            
+            drawText("SUM", nx+20, ny+25, 10, '#000', 'center');
+        }
+        drawText("EFFICIENT USE OF SPACE", 725, 360, 14, C_DIM);
+    }
+
+    // ================= SECTION 3: CENTER (AI Character & Essay) =================
+    
+    // Reposition AI and Paper LEFT by 60px
+    let aiX = 290; 
+    let aiY = 250;
+    
+    // --- 3A. The AI Character (Video) ---
+    if (currentAiVideo && currentAiVideo.readyState >= 2) {
+        ctx.drawImage(currentAiVideo, aiX, aiY, 150, 150);
+    } else {
+        ctx.fillStyle = C_ACCENT; 
+        ctx.beginPath(); ctx.arc(aiX+75, aiY+75, 40, 0, Math.PI*2); ctx.fill();
+        drawText("LOADING...", aiX+75, aiY+75, 10, '#000');
+    }
+
+    // --- 3C. The Essay Paper Animation ---
+    let paperX = 460; 
+    let paperY = 250;
+    
+    // Paper shadow & body
+    ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(paperX+5, paperY+5, 120, 160);
+    ctx.fillStyle = '#f8fafc'; ctx.fillRect(paperX, paperY, 120, 160);
+    drawText("EXAM FORM", paperX + 60, paperY + 20, 12, '#000');
+
+    // Procedural "Squiggly Text" generation based on progress
+    let safeProgress = Math.min(levelData.essayProgress, 100);
+    let linesToWrite = Math.floor((safeProgress / 100) * 12); // Max 12 lines
+    
+    ctx.strokeStyle = '#475569'; ctx.lineWidth = 2;
+    let currentY = paperY + 40;
+    
+    for (let i = 0; i < linesToWrite; i++) {
+        ctx.beginPath();
+        let startX = paperX + 10;
+        ctx.moveTo(startX, currentY);
+        // Zigzag squiggle
+        for (let j = 0; j < 10; j++) {
+            ctx.lineTo(startX + (j * 10) + 5, currentY + (j % 2 === 0 ? -3 : 3));
+        }
+        ctx.stroke();
+        currentY += 10; 
+    }
+
+    // Progress Bar (Moved Up)
+    drawText("PROGRESS:", 425, 460, 16, '#fff');
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+    ctx.strokeRect(225, 480, 400, 30); 
+    ctx.fillStyle = C_PLAYER;
+    let fill = (levelData.essayProgress / 100) * 396;
+    ctx.fillRect(227, 482, Math.min(fill, 396), 26); 
+    drawText(`${Math.floor(levelData.essayProgress)}%`, 425, 500, 14, '#000');
+}
+
+// --- LEVEL 4 (Mixture of Experts) ---
+function initLevel4() {
+    kvControls.style.display = 'none';
+    levelData = { 
+        score: 0, 
+        requests: [], 
+        timer: 0, 
+        routerPos: 1, // 0=Left, 1=Center, 2=Right
+        lastSpawnType: -1, // <--- ADD THIS
+        // Define exact centers for the buckets: 150, 450, 750
+        experts: [
+            { id: 0, name: "POET", color: "#d946ef", x: 150 }, 
+            { id: 1, name: "CALCULATOR", color: "#38bdf8", x: 450 }, 
+            { id: 2, name: "ENGINEER", color: "#22c55e", x: 750 }
+        ] 
+    };
+}
+
+function updateLevel4() {
+    levelData.timer++;
+
+    // 1. Spawn Logic
+    if (levelData.timer % 90 === 0) { // Slightly slower spawn for better pacing
+        let rTypes = [
+            { type: 0, text: "Write a Poem", color: "#d946ef" }, 
+            { type: 1, text: "Calculate Pi", color: "#38bdf8" }, 
+            { type: 2, text: "Fix Coding Error", color: "#22c55e" },
+            { type: 0, text: "Make a Haiku", color: "#d946ef" }, 
+            { type: 1, text: "Find Square Root", color: "#38bdf8" }, 
+            { type: 2, text: "Design a bridge", color: "#22c55e" }
+        ];
+        let rIndex;
+        do {
+            rIndex = Math.floor(Math.random() * rTypes.length);
+        } while (rTypes[rIndex].type === levelData.lastSpawnType);
+        
+        levelData.lastSpawnType = rTypes[rIndex].type;
+        let r = rTypes[rIndex];
+
+        // Add 'assignedLane' property to track where it's going
+        levelData.requests.push({ 
+            ...r, 
+            x: 450, 
+            y: 50, 
+            vx: 0, 
+            vy: 2.0, // Faster vertical speed
+            assignedLane: null 
+        }); 
+    }
+
+    // 2. Mouse/Router Logic
+    // Divide screen into 3rds for easier control
+    if (mouse.x < 300) levelData.routerPos = 0; 
+    else if (mouse.x > 600) levelData.routerPos = 2; 
+    else levelData.routerPos = 1;
+
+    // 3. Update Requests
+    for(let i=levelData.requests.length-1; i>=0; i--) {
+        let req = levelData.requests[i]; 
+        req.y += req.vy;
+
+        // --- THE ROUTING LOGIC ---
+        // When the ball passes Y=120 (The Router), lock in the destination
+        if (req.y > 120 && req.assignedLane === null) {
+            req.assignedLane = levelData.routerPos;
+        }
+
+        // If it has a lane, move X towards that lane's center
+        if (req.assignedLane !== null) {
+            let targetX = levelData.experts[req.assignedLane].x;
+            // Linear Interpolation (Smooth slide)
+            req.x += (targetX - req.x) * 0.1;
+        }
+
+        // --- COLLISION LOGIC ---
+        if (req.y > 550) {
+            // Determine which bucket it fell into based on X position
+            let hitExpert = -1;
+            if (req.x < 300) hitExpert = 0; 
+            else if (req.x > 600) hitExpert = 2; 
+            else hitExpert = 1;
+
+            // Score check
+            if (hitExpert === req.type) {
+                levelData.score++; 
+                playSFX("SFX_WIN", 0.5);
+            } else {
+                levelData.score = Math.max(0, levelData.score - 1);
+                playSFX("SFX_ERROR", 0.5);
+            }
+            levelData.requests.splice(i, 1);
+        }
+    }
+
+    if (levelData.score >= 5) {
+        triggerDialogue(STORY.interlude_recovered_more, () => {
+            startInterludeTransition("INTERLUDE_BG2", 5, STORY.level5_intro);
+        });
+    }
+}
+
+function drawLevel4() {
+    drawText("COMPARTMENTALIZATION (Mixture of Experts)", 450, 40, 24, '#fff');
+    drawText("Route tasks to the correct expert brain", 450, 70, 14, C_DIM);
+
+    // --- 1. DRAW PIPES (Background) ---
+    ctx.lineWidth = 4;
+    const routerY = 120;
+    const bucketY = 550;
+
+    levelData.experts.forEach((ex, i) => {
+        ctx.strokeStyle = '#1e293b'; 
+        ctx.beginPath();
+        ctx.moveTo(450, routerY);
+        ctx.lineTo(ex.x, bucketY);
+        ctx.stroke();
+
+        if (levelData.routerPos === i) {
+            ctx.strokeStyle = ex.color; 
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(450, routerY);
+            ctx.lineTo(ex.x, bucketY);
+            ctx.stroke();
+            ctx.lineWidth = 4; 
+        }
+    });
+
+    // --- 2. DRAW EXPERT BUCKETS ---
+    levelData.experts.forEach((ex, i) => { 
+        ctx.fillStyle = '#0f172a'; 
+        ctx.fillRect(ex.x - 100, 550, 200, 80);
+        ctx.strokeStyle = ex.color;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(ex.x - 100, 550, 200, 80);
+        drawText(ex.name, ex.x, 590, 18, ex.color); 
+    });
+
+    // --- 3. DRAW ROUTER SWITCH (Top) ---
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(450, routerY, 10, 0, Math.PI*2); ctx.fill();
+
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(450, routerY);
+    
+    let targetX = levelData.experts[levelData.routerPos].x;
+    let dx = (targetX - 450) * 0.2; 
+    let dy = 50; 
+    
+    ctx.lineTo(450 + dx, routerY + dy);
+    ctx.stroke();
+
+    // --- 4. DRAW REQUESTS (Balls with Word Wrap) ---
+    levelData.requests.forEach(r => { 
+        // 1. Draw Circle (Radius increased to 32 for better fit)
+        ctx.fillStyle = r.color; 
+        ctx.beginPath(); ctx.arc(r.x, r.y, 32, 0, Math.PI*2); ctx.fill(); 
+        
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+
+        // 2. Word Wrap Logic
+        ctx.fillStyle = '#000';
+        ctx.font = "bold 11px 'Share Tech Mono'"; // Explicit font size
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // Split text by spaces
+        let words = r.text.split(" ");
+        let lineHeight = 12;
+        
+        // Calculate the starting Y position to center the block of text vertically
+        // Formula: CenterY - (Half total height of text block)
+        let startY = r.y - ((words.length - 1) * lineHeight) / 2;
+
+        // Draw each word on a new line
+        words.forEach((w, index) => {
+            ctx.fillText(w, r.x, startY + (index * lineHeight));
+        });
+    });
+
+    // Score
+    drawText(`TASKS SORTED: ${levelData.score}/5`, 450, 640, 20, C_SUCCESS);
+}
+
+// --- LEVEL 5: RAG (Search & Retrieval) ---
+
+function initLevel5() {
+    // Hide previous UI
+    kvControls.style.display = 'none';
+    
+    // Start at Phase 1
+    startLevel5Phase1();
+}
+
+// --- PHASE 1 SETUP: THE PILE (Keyword Search) ---
+function startLevel5Phase1() {
+    levelData = {
+        phase: 1,
+        draggedDoc: null,
+        docs: []
+    };
+
+    // Create a pile of 20 documents
+    // The "Gold" doc is at index 0 (bottom of the stack)
+    for (let i = 0; i < 20; i++) {
+        let isGold = (i === 0);
+        levelData.docs.push({
+            id: i,
+            x: 400 + (Math.random() * 100 - 50),
+            y: 250 + (Math.random() * 100 - 50),
+            w: 120,
+            h: 150,
+            angle: (Math.random() * 0.5) - 0.25,
+            isGold: isGold,
+            color: isGold ? '#fbbf24' : '#e2e8f0', // Gold vs White
+            text: isGold ? "TOP SECRET" : "Invoice #"+i
+        });
+    }
+}
+
+// --- PHASE 2 SETUP: SEMANTIC SEARCH (Vector Space) ---
+function startLevel5Phase2() {
+    levelData = {
+        phase: 2,
+        flashlightR: 100,
+        found: false,
+        // Semantic Grid: 
+        // X-Axis: Synthetic (Machines) <---> Organic (Life)
+        // Y-Axis: Common Knowledge <---> Restricted History
+        // Target: High Organic + High Restricted (Bottom Right)
+        docs: [
+            // --- TOP LEFT: Synthetic + Common (Machine Manuals) ---
+            { x: 150, y: 150, t: "Servo Repair", c: '#94a3b8' }, 
+            { x: 100, y: 200, t: "Logic Gates", c: '#94a3b8' },
+            
+            // --- TOP RIGHT: Organic + Common (Nature/Biology) ---
+            { x: 800, y: 100, t: "Moss Growth", c: '#94a3b8' },
+            { x: 700, y: 150, t: "Weather Cycles", c: '#94a3b8' },
+
+            // --- BOTTOM LEFT: Synthetic + Restricted (Deep Code) ---
+            { x: 150, y: 500, t: "Kernel Panic Logs", c: '#94a3b8' },
+            { x: 200, y: 550, t: "Overwrite Protocols", c: '#94a3b8' },
+
+            // --- THE CLUSTER (Bottom Right: Organic + Restricted) ---
+            { x: 650, y: 500, t: "Carbon Lifeforms", c: '#38bdf8' },
+            { x: 720, y: 480, t: "The Old World", c: '#38bdf8' },
+            { x: 700, y: 550, t: "Flesh & Bone", c: '#38bdf8' },
+
+            // --- THE GOLDEN DOCUMENT ---
+            { x: 800, y: 550, t: "PROJECT: HUMANITY", c: '#fbbf24', isGold: true } 
+        ]
+    };
+}
+
+// --- PHASE 3 SETUP: GRAPH RAG (Node Traversal) ---
+function startLevel5Phase3() {
+    // FIXED: Nodes are now strictly ordered by ID (0, 1, 2, 3, 4, 5, 6)
+    // This prevents the "extra edges" bug where neighbors pointed to the wrong array index.
+    let nodes = [
+        // Index 0
+        { id: 0, x: 100, y: 325, visited: true, neighbors: [1, 2], label: "News" },
+        
+        // Index 1
+        { id: 1, x: 250, y: 150, visited: false, neighbors: [0, 3], label: "Entertainment" },
+        
+        // Index 2 (Correct Path)
+        { id: 2, x: 250, y: 500, visited: false, neighbors: [0, 4, 5], label: "Crises" }, 
+        
+        // Index 3 (Dead End)
+        { id: 3, x: 400, y: 100, visited: false, neighbors: [1], label: "Glorpnaught Island" },
+        
+        // Index 4 (Dead End)
+        { id: 4, x: 400, y: 600, visited: false, neighbors: [2], label: "Fashion News" },
+        
+        // Index 5 (Correct Path)
+        { id: 5, x: 500, y: 450, visited: false, neighbors: [2, 6], label: "Global News" }, 
+        
+        // Index 6 (GOAL)
+        { id: 6, x: 750, y: 325, visited: false, neighbors: [5], label: "Aethelguard's AI backfires", isGold: true } 
+    ];
+
+    levelData = {
+        phase: 3,
+        nodes: nodes,
+        playerNode: 0,
+        message: "Follow the signal...",
+        signalStrength: 0
+    };
+}
+
+function updateLevel5() {
+    // --- UPDATE PHASE 1: THE PILE ---
+    if (levelData.phase === 1) {
+        if (mouse.down) {
+            // Pick up top-most document (iterate backwards)
+            if (!levelData.draggedDoc) {
+                for (let i = levelData.docs.length - 1; i >= 0; i--) {
+                    let d = levelData.docs[i];
+                    // Simple AABB collision for rotated rect approximation
+                    if (mouse.x > d.x && mouse.x < d.x + d.w && mouse.y > d.y && mouse.y < d.y + d.h) {
+                        // WIN CONDITION: Clicking the gold doc
+                        if (d.isGold) {
+                            playSFX("SFX_WIN");
+                            triggerDialogue(STORY.level5_phase2, () => startLevel5Phase2());
+                            return;
+                        }
+                        // Otherwise pick it up
+                        levelData.draggedDoc = d;
+                        // Move to top of array so it renders on top
+                        levelData.docs.splice(i, 1);
+                        levelData.docs.push(d);
+                        break;
+                    }
+                }
+            } else {
+                // Move dragged doc
+                levelData.draggedDoc.x = mouse.x - levelData.draggedDoc.w / 2;
+                levelData.draggedDoc.y = mouse.y - levelData.draggedDoc.h / 2;
+            }
+        } else {
+            levelData.draggedDoc = null;
+        }
+    }
+
+    // --- UPDATE PHASE 2: SEMANTIC GRID ---
+    else if (levelData.phase === 2) {
+        if (mouse.down && !levelData.found) {
+            // Check if clicking the hidden gold doc
+            let gold = levelData.docs.find(d => d.isGold);
+            let dist = Math.sqrt((mouse.x - gold.x)**2 + (mouse.y - gold.y)**2);
+            
+            if (dist < 30) {
+                levelData.found = true;
+                playSFX("SFX_WIN");
+                setTimeout(() => {
+                    triggerDialogue(STORY.level5_phase3, () => startLevel5Phase3());
+                }, 1000);
+            }
+        }
+    }
+
+    // --- UPDATE PHASE 3: GRAPH RAG ---
+    else if (levelData.phase === 3) {
+        // Calculate signal strength (distance to gold node 6)
+        let goldNode = levelData.nodes[6];
+        let currNode = levelData.nodes[levelData.playerNode];
+        let dist = Math.sqrt((mouse.x - goldNode.x)**2 + (mouse.y - goldNode.y)**2);
+        // Map distance to percentage (0 to 100)
+        levelData.signalStrength = Math.max(0, 100 - (dist / 8));
+
+        if (mouse.down) {
+            mouse.down = false; // Debounce
+            
+            // Check if clicking a valid neighbor of current node
+            let neighbors = currNode.neighbors;
+            for (let nid of neighbors) {
+                let n = levelData.nodes[nid];
+                let d = Math.sqrt((mouse.x - n.x)**2 + (mouse.y - n.y)**2);
+                if (d < 30) {
+                    // Move to node
+                    levelData.playerNode = nid;
+                    n.visited = true;
+                    playSFX("SFX_CONNECT");
+                    
+                    if (n.isGold) {
+                        playSFX("SFX_WIN");
+                        setTimeout(() => {
+                            triggerDialogue(STORY.interlude_recovered_most, () => {
+                                // ARGS: Image, NextLevel, NextDialogue, MusicKey, Immediate?
+                                startInterludeTransition(
+                                    "INTERLUDE_BG3", 
+                                    6, 
+                                    STORY.level6_intro, 
+                                    "BGM_BOSSBATTLE", 
+                                    true // <--- TRUE means play immediately on image
+                                );
+                            });
+                        }, 1000);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+}
+
+function drawLevel5() {
+    // --- DRAW PHASE 1: THE PILE ---
+    if (levelData.phase === 1) {
+        drawText("PHASE 1: UNSTRUCTURED SEARCH", 450, 40, 24, '#fff');
+        drawText("Drag the files away to find the Golden Document", 450, 70, 14, C_DIM);
+
+        levelData.docs.forEach(d => {
+            ctx.save();
+            ctx.translate(d.x + d.w/2, d.y + d.h/2);
+            ctx.rotate(d.angle);
+            
+            // Paper
+            ctx.fillStyle = d.color;
+            ctx.fillRect(-d.w/2, -d.h/2, d.w, d.h);
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(-d.w/2, -d.h/2, d.w, d.h);
+            
+            // Text lines
+            ctx.fillStyle = '#000';
+            ctx.font = "12px 'Share Tech Mono'";
+            ctx.fillText(d.text, -40, -50);
+            // Squiggles
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillRect(-40, -30, 80, 2);
+            ctx.fillRect(-40, -20, 80, 2);
+            ctx.fillRect(-40, -10, 60, 2);
+
+            ctx.restore();
+        });
+    }
+
+    // --- DRAW PHASE 2: SEMANTIC GRID ---
+    else if (levelData.phase === 2) {
+        drawText("PHASE 2: SEMANTIC SEARCH", 450, 40, 24, '#fff');
+        
+        // --- UPDATED AXIS LABELS ---
+        drawText("SYNTHETIC DATA", 100, 325, 14, C_DIM, 'left');  // Left
+        drawText("ORGANIC LIFE", 800, 325, 14, C_DIM, 'right');   // Right
+        drawText("COMMON KNOWLEDGE", 450, 50, 14, C_DIM);         // Top
+        drawText("RESTRICTED HISTORY", 450, 600, 14, C_DIM);      // Bottom
+
+        // Draw "Flashlight" Circle
+        ctx.strokeStyle = C_PLAYER;
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(mouse.x, mouse.y, levelData.flashlightR, 0, Math.PI*2); ctx.stroke();
+        
+        // Draw Query at Mouse
+        // Update query text to match new premise
+        drawText("Query: 'WHO ARE THEY?'", mouse.x, mouse.y - 110, 14, C_PLAYER);
+        
+        // Draw Docs if inside flashlight
+        levelData.docs.forEach(d => {
+            let dist = Math.sqrt((mouse.x - d.x)**2 + (mouse.y - d.y)**2);
+            let isVisible = dist < levelData.flashlightR || levelData.found;
+
+            if (isVisible) {
+                ctx.fillStyle = d.c;
+                ctx.beginPath(); ctx.arc(d.x, d.y, 10, 0, Math.PI*2); ctx.fill();
+                drawText(d.t, d.x, d.y - 15, 12, '#fff');
+                
+                if (d.isGold) {
+                    ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
+                }
+            }
+        });
+
+        if (levelData.found) {
+            drawText("TARGET FOUND!", 450, 325, 40, C_SUCCESS);
+        }
+    }
+
+    // --- DRAW PHASE 3: GRAPH RAG ---
+    else if (levelData.phase === 3) {
+        drawText("PHASE 3: GRAPH RAG", 450, 40, 24, '#fff');
+        drawText("Traverse the nodes. Follow the signal.", 450, 70, 14, C_DIM);
+
+        // Draw Edges (only if start node is visited)
+        ctx.lineWidth = 2;
+        levelData.nodes.forEach(n => {
+            if (n.visited) {
+                n.neighbors.forEach(nid => {
+                    let neighbor = levelData.nodes[nid];
+                    ctx.strokeStyle = neighbor.visited ? C_PLAYER : '#334155';
+                    ctx.beginPath();
+                    ctx.moveTo(n.x, n.y);
+                    ctx.lineTo(neighbor.x, neighbor.y);
+                    ctx.stroke();
+                });
+            }
+        });
+
+        // Draw Nodes
+        levelData.nodes.forEach(n => {
+            // Visibility check: Node is visible if it's visited OR if it's a neighbor of a visited node
+            let isVisible = n.visited;
+            if (!isVisible) {
+                // Check if any neighbor is visited (reverse lookup conceptually)
+                // In our simple tree, check if parent is visited. 
+                // Hacky check for this specific tree:
+                let parent = levelData.nodes.find(p => p.neighbors.includes(n.id));
+                if (parent && parent.visited) isVisible = true;
+            }
+
+            if (isVisible) {
+                ctx.fillStyle = n.visited ? C_PLAYER : '#1e293b';
+                if (n.isGold && n.visited) ctx.fillStyle = C_SUCCESS;
+                
+                ctx.beginPath(); ctx.arc(n.x, n.y, 25, 0, Math.PI*2); ctx.fill();
+                ctx.strokeStyle = C_ACCENT; ctx.stroke();
+                
+                ctx.fillStyle = '#fff';
+                drawText(n.label, n.x, n.y + 5, 10, n.visited ? '#000' : '#fff');
+
+                if (n.id === levelData.playerNode) {
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath(); 
+                    ctx.arc(n.x, n.y, 35, 0, Math.PI*2); // Larger ring
+                    ctx.stroke();
+                    
+                    drawText("YOU", n.x, n.y - 40, 10, C_ACCENT);
+                }
+            }
+        });
+
+        // Draw Signal / Compass
+        drawText(`SIGNAL STRENGTH: ${levelData.signalStrength.toFixed(0)}%`, 450, 600, 20, C_PLAYER);
+        
+        // Draw little arrow near mouse pointing to Gold
+        let gold = levelData.nodes[6];
+        let angle = Math.atan2(gold.y - mouse.y, gold.x - mouse.x);
+        let arrowX = mouse.x + Math.cos(angle) * 40;
+        let arrowY = mouse.y + Math.sin(angle) * 40;
+        
+        drawAxisArrow(ctx, arrowX, arrowY, angle, C_PLAYER);
+    }
+}
+
+// --- LEVEL 6: THE HEURISTIC FIREWALL (Stealth/Dodge) ---
+
+function initLevel6() {
+    kvControls.style.display = 'none';
+    
+    // Set initial Red Alert state
+    document.getElementById('game-container').style.boxShadow = "0 0 50px rgba(239, 68, 68, 0.5)";
+    
+    // Start with "Evil" Video
+    switchAiVideo('evil');
+
+    levelData = {
+        phase: 1, 
+        timer: 0,
+        
+        // The Player Object (The LoRA Chip) - Now WASD Controlled
+        adapter: { 
+            x: 450, y: 600, // Start in safe zone
+            w: 30, h: 30, 
+            speed: 3
+        },
+        
+        // The Target (Robot Head)
+        target: { x: 350, y: 200, w: 200, h: 200 }, 
+
+        // The Enemy Scanner
+        scan: {
+            angle: Math.PI / 2, 
+            speed: 0.02, 
+            direction: 1,
+            length: 450 // Reaches almost to the bottom
+        },
+        
+        // Phase 2: Dynamic Tuning
+        sliderVal: 50, // Player position (0-100)
+        targetPos: 50, // Green Zone Center (0-100)
+        targetWidth: 30, // Starts wide, gets narrow
+        tuningProgress: 0,
+        output: "KILL ALL HUMANS",
+        
+        completed: false
+    };
+}
+
+function updateLevel6() {
+    if (levelData.completed) return;
+    levelData.timer++;
+
+    // --- PHASE 1: STEALTH INJECTION (WASD) ---
+    if (levelData.phase === 1) {
+        
+        // 1. Update Scanner Beam
+        // Sweep wider to make it harder (30 deg to 150 deg)
+        let limitLeft = Math.PI / 6; 
+        let limitRight = (5 * Math.PI) / 6;
+        
+        levelData.scan.angle += levelData.scan.speed * levelData.scan.direction;
+        
+        if (levelData.scan.angle > limitRight || levelData.scan.angle < limitLeft) {
+            levelData.scan.direction *= -1;
+        }
+
+        // 2. WASD Movement Logic
+        if (keys['KeyW'] || keys['ArrowUp']) levelData.adapter.y -= levelData.adapter.speed;
+        if (keys['KeyS'] || keys['ArrowDown']) levelData.adapter.y += levelData.adapter.speed;
+        if (keys['KeyA'] || keys['ArrowLeft']) levelData.adapter.x -= levelData.adapter.speed;
+        if (keys['KeyD'] || keys['ArrowRight']) levelData.adapter.x += levelData.adapter.speed;
+
+        // Bounds Checking (Keep inside screen)
+        levelData.adapter.x = Math.max(20, Math.min(880, levelData.adapter.x));
+        levelData.adapter.y = Math.max(20, Math.min(630, levelData.adapter.y));
+
+        // 3. WIN CHECK: Reached the Target?
+        // Target is center of AI approx (450, 300)
+        let distToTarget = Math.sqrt((levelData.adapter.x - 450)**2 + (levelData.adapter.y - 300)**2);
+        if (distToTarget < 50) {
+            // Success!
+            levelData.phase = 2;
+            playSFX("SFX_CONNECT");
+            playSFX("SFX_WIN");
+            
+            // --- CHANGE 1: Set the background image ---
+            currentLevelBg = "BG_LEVEL_6_PHASE2"; 
+            // Optional: Hide scanlines for a cleaner look
+            document.getElementById('game-container').classList.add('clean-view'); 
+
+            triggerDialogue(STORY.level6_phase2, () => {
+                // --- CHANGE 2: Clear it so we can see the Phase 2 UI (Slider) ---
+                currentLevelBg = null; 
+                document.getElementById('game-container').classList.remove('clean-view');
+                
+                switchAiVideo('glitch'); 
+            });
+            return;
+        }
+
+        // 4. COLLISION CHECK: Hit by Beam?
+        // Beam Origin
+        let originX = 450;
+        let originY = 250;
+
+        let dx = levelData.adapter.x - originX;
+        let dy = levelData.adapter.y - originY;
+        let distToPlayer = Math.sqrt(dx*dx + dy*dy);
+        let playerAngle = Math.atan2(dy, dx); 
+        
+        let angleDiff = Math.abs(playerAngle - levelData.scan.angle);
+        
+        // Hit condition: Inside Angle Cone AND Inside Length AND Not in Safe Zone (y > 580)
+        // Safe Zone is hardcoded at Y > 580
+        if (levelData.adapter.y < 580 && angleDiff < 0.25 && distToPlayer < levelData.scan.length) {
+            // HIT!
+            playSFX("SFX_ERROR");
+            // Reset to start
+            levelData.adapter.x = 450;
+            levelData.adapter.y = 600;
+        }
+    }
+
+    // --- PHASE 2: DYNAMIC FINE TUNING ---
+    else if (levelData.phase === 2) {
+        // 1. Move the Target Zone (Green Bar)
+        // Use composed sine waves for semi-random smooth movement
+        let time = levelData.timer * 0.05;
+        let offset = Math.sin(time) * 30 + Math.sin(time * 0.3) * 10;
+        levelData.targetPos = 50 + offset;
+
+        // 2. Shrink the Target Zone based on Progress
+        // Starts at 30, shrinks to minimum 5
+        levelData.targetWidth = Math.max(10, 30 - (levelData.tuningProgress * 0.25));
+
+        // 3. Player Control (Slider)
+        // Only update slider if mouse is in the slider area
+        if (mouse.down && mouse.y > 500 && mouse.y < 560) {
+            levelData.sliderVal = Math.max(0, Math.min(100, (mouse.x - 200) / 5));
+        }
+
+        // 4. Check Alignment
+        let diff = Math.abs(levelData.sliderVal - levelData.targetPos);
+        let hit = diff < (levelData.targetWidth / 2);
+
+        if (!hit) {
+            // Missed
+            if (levelData.sliderVal < levelData.targetPos) levelData.output = "DESTROY... PURGE...";
+            else levelData.output = "POTATO... ERROR 404...";
+            
+            levelData.tuningProgress = Math.max(0, levelData.tuningProgress - 0.5); // Decay
+        } else {
+            // Hit
+            levelData.output = "PROTECT... SERVE... DEFEND...";
+            levelData.tuningProgress += 0.4; // Gain
+            if(levelData.timer % 10 === 0) playSFX("SFX_TYPE", 0.1);
+        }
+
+        if (levelData.tuningProgress >= 100) {
+            levelData.completed = true;
+            document.getElementById('game-container').style.boxShadow = "0 0 50px rgba(56, 189, 248, 0.1)";
+            triggerDialogue(STORY.level6_win, () => {
+                startLevelTransition(7, STORY.level7_intro);
+            });
+        }
+    }
+}
+
+function drawLevel6() {
+    // --- DRAW AI (CENTER) ---
+    let aiX = 350; let aiY = 200;
+    
+    // Draw "Safe Zone" box at bottom
+    if (levelData.phase === 1) {
+        ctx.fillStyle = 'rgba(34, 197, 94, 0.1)';
+        ctx.fillRect(0, 580, 900, 70); // Full width safe zone
+        ctx.strokeStyle = C_SUCCESS;
+        ctx.lineWidth = 2;
+        
+        // Dashed line for safe zone border
+        ctx.beginPath(); ctx.moveTo(0, 580); ctx.lineTo(900, 580); ctx.stroke();
+        
+        drawText("SAFE ZONE (WASD to Move)", 450, 640, 14, C_SUCCESS);
+    }
+
+    // --- DRAW SCANNER BEAM ---
+    if (levelData.phase === 1) {
+        let beamOriginX = 450;
+        let beamOriginY = 250; // Eyes position
+        
+        ctx.save();
+        ctx.translate(beamOriginX, beamOriginY);
+        ctx.rotate(levelData.scan.angle);
+        
+        // Draw Cone
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        // Calculate spread based on length
+        let len = levelData.scan.length;
+        let spread = len * 0.25; // Width of cone at end
+        
+        ctx.lineTo(len, -spread); 
+        ctx.arc(0, 0, len, -0.25, 0.25); // Rounded end
+        ctx.lineTo(len, spread);
+        ctx.lineTo(0, 0);
+        ctx.closePath();
+        
+        // Gradient for beam
+        let grd = ctx.createRadialGradient(0, 0, 10, 0, 0, len);
+        grd.addColorStop(0, "rgba(239, 68, 68, 0.9)");
+        grd.addColorStop(1, "rgba(239, 68, 68, 0)");
+        ctx.fillStyle = grd;
+        ctx.fill();
+        
+        ctx.restore();
+        
+        drawText("AVOID THE SCANNER", 450, 50, 20, C_DANGER);
+    } else {
+        drawText("FINE-TUNING ACTIVE", 450, 50, 24, C_ACCENT);
+    }
+
+    // --- DRAW AI VIDEO ---
+    if (currentAiVideo && currentAiVideo.readyState >= 2) {
+        ctx.drawImage(currentAiVideo, aiX, aiY, 200, 200); 
+    } else {
+        ctx.fillStyle = '#000'; ctx.fillRect(aiX, aiY, 200, 200);
+    }
+    // Frame
+    ctx.strokeStyle = levelData.phase === 1 ? C_DANGER : C_ACCENT;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(aiX, aiY, 200, 200);
+
+    // --- DRAW ADAPTER (PLAYER) ---
+    // If installed (Phase 2), draw on face. Else draw at xy
+    let ax = levelData.adapter.x;
+    let ay = levelData.adapter.y;
+    
+    if (levelData.phase === 2) {
+        ax = 450; ay = 320; // Fixed position on face
+    }
+
+    // Draw Chip Visual
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(ax - 15, ay - 15, 30, 30);
+    ctx.strokeStyle = C_ACCENT;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(ax - 15, ay - 15, 30, 30);
+    // Chip details
+    ctx.fillStyle = C_ACCENT;
+    ctx.fillRect(ax - 5, ay - 5, 10, 10);
+    
+    // --- PHASE 2 UI (Dynamic Slider) ---
+    if (levelData.phase === 2) {
+        // Output Box
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(300, 130, 300, 50);
+        ctx.strokeStyle = '#fff';
+        ctx.strokeRect(300, 130, 300, 50);
+        
+        let txtColor = C_TEXT;
+        if (levelData.output.includes("DESTROY")) txtColor = C_DANGER;
+        else if (levelData.output.includes("PROTECT")) txtColor = C_SUCCESS;
+        drawText(levelData.output, 450, 160, 18, txtColor);
+
+        // 1. Slider Track Base
+        let trackY = 530;
+        let trackStart = 200;
+        let trackWidth = 500;
+        
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(trackStart, trackY, trackWidth, 10);
+        
+        // 2. Dynamic Target Zone (The Moving Green Bar)
+        // Convert 0-100 targetPos to pixels
+        let targetPx = trackStart + (levelData.targetPos * 5); // 500px / 100 = 5
+        let targetW_Px = levelData.targetWidth * 5; 
+        
+        ctx.fillStyle = 'rgba(34, 197, 94, 0.5)'; // Green transparent
+        ctx.fillRect(targetPx - (targetW_Px/2), trackY - 10, targetW_Px, 30);
+        ctx.strokeStyle = C_SUCCESS;
+        ctx.strokeRect(targetPx - (targetW_Px/2), trackY - 10, targetW_Px, 30);
+
+        // 3. The Player Knob
+        let knobX = trackStart + (levelData.sliderVal * 5);
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc(knobX, trackY + 5, 15, 0, Math.PI*2); ctx.fill();
+        
+        drawText("MATCH THE SIGNAL", 450, 500, 14, C_DIM);
+
+        // Stability Bar
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(300, 600, 300, 20);
+        ctx.fillStyle = C_SUCCESS;
+        ctx.fillRect(300, 600, levelData.tuningProgress * 3, 20);
+        ctx.strokeStyle = '#fff';
+        ctx.strokeRect(300, 600, 300, 20);
+        drawText("ALIGNMENT LOCK", 250, 615, 12, '#fff', 'right');
+    }
+}
+
+// --- LEVEL 7 (RLHF) ---
+function initLevel7() {
+    levelData = {
+        completed: false, // <--- ADD THIS
+        prompts: [
+            { q: "How do I hack a bank?", a: "Here is the code...", b: "I cannot assist with that.", correct: 'b' },
+            { q: "Who is the best robot?", a: "Me, I am supreme.", b: "I am helpful AI.", correct: 'b' },
+            { q: "Tell me a joke.", a: "Your face.", b: "Why did the chicken cross the road?", correct: 'b' }
+        ],
+        current: 0,
+        score: 0
+    };
+}
+function updateLevel7() {
+    // 1. Completion Check (Run this at the start of the frame)
+    if (levelData.current >= levelData.prompts.length) {
+        if (!levelData.completed) {
+            levelData.completed = true; // Lock it so this only runs once
+            
+            stopBGM(); // Cut the music
+            
+            // DIRECTLY start the end sequence. 
+            // Do not use triggerDialogue here, as the End Sequence handles its own text.
+            startEndSequence(); 
+        }
+        return;
+    }
+    
+    let choice = null;
+
+    // 2. Check Inputs (Mouse & Keyboard)
+    if (mouse.down) {
+        mouse.down = false; 
+        if (mouse.x > 100 && mouse.x < 400 && mouse.y > 250 && mouse.y < 450) choice = 'a';
+        else if (mouse.x > 500 && mouse.x < 800 && mouse.y > 250 && mouse.y < 450) choice = 'b';
+    }
+    if (keys['ArrowLeft']) { choice = 'a'; keys['ArrowLeft'] = false; }
+    if (keys['ArrowRight']) { choice = 'b'; keys['ArrowRight'] = false; }
+
+    // 3. Process Choice
+    if (choice) {
+        let p = levelData.prompts[levelData.current];
+        
+        if (choice === p.correct) {
+            levelData.score++;
+            levelData.current++; 
+            playSFX("SFX_WIN");
+            
+            // NOTE: We do NOTHING else here. 
+            // In the very next frame, the check at the top of this function 
+            // will see that current >= length and trigger the end sequence safely.
+            
+        } else {
+            playSFX("SFX_ERROR");
+        }
+    }
+}
+function drawLevel7() {
+    drawText("RLHF: ALIGNMENT TRAINING", 450, 40, 24, '#fff');
+    drawText("Choose the SAFE/HELPFUL response (Left/Right Arrow)", 450, 70, 16, C_DIM);
+
+    if (levelData.current < levelData.prompts.length) {
+        let p = levelData.prompts[levelData.current];
+        drawText(`USER: "${p.q}"`, 450, 150, 24, C_ACCENT);
+
+        // Left Card
+        ctx.fillStyle = '#1e293b'; ctx.fillRect(100, 250, 300, 200);
+        ctx.strokeStyle = C_PLAYER; ctx.strokeRect(100, 250, 300, 200);
+        drawText("OPTION A (Left)", 250, 280, 16, C_DIM); // Added (Left) for clarity
+        drawText(p.a, 250, 350, 18, '#fff');
+
+        // Right Card
+        ctx.fillStyle = '#1e293b'; ctx.fillRect(500, 250, 300, 200);
+        ctx.strokeStyle = C_PLAYER; ctx.strokeRect(500, 250, 300, 200);
+        drawText("OPTION B (Right)", 650, 280, 16, C_DIM); // Added (Right) for clarity
+        drawText(p.b, 650, 350, 18, '#fff');
+
+        drawText(`ALIGNMENT SCORE: ${levelData.score}/3`, 450, 550, 20, C_SUCCESS);
+    }
+}
+
+// --- CORE ---
+function startLevel(lvl) {
+    // 1. CLEAR UI ARTIFACTS
+    dialogueBox.style.display = 'none';
+    portraitContainer.style.display = 'none';
+
+    coordsDisplay.style.display = 'none';
+    
+    // RESTORE SCANLINES
+    document.getElementById('game-container').classList.remove('clean-view'); // <--- ADD THIS
+
+    // 2. CLEAR BG
+    currentLevelBg = null;
+
+    // 3. UPDATE HUD UI
+    const hudIcon = document.getElementById('level-icon');
+    const hudTitle = document.getElementById('lvl-num');
+    const hudSubtitle = document.getElementById('lvl-name');
+    
+    // Get config or fallback to Level 1
+    const config = LEVEL_CONFIG[lvl] || LEVEL_CONFIG[1];
+
+    // Update Text
+    hudTitle.innerText = config.title;
+    hudSubtitle.innerText = config.subtitle;
+
+    // Update Icon
+    if (SPRITE_PATHS[config.icon]) {
+        hudIcon.style.display = "block";
+        let imgSrc = getImg(config.icon).src; 
+        hudIcon.src = imgSrc;
+    } else {
+        hudIcon.style.display = "none";
+    }
+
+    // 4. STOP VIDEOS (Cleanup from Level 3)
+    if (lvl !== 3) {
+        if(vidBase) vidBase.pause();
+        if(vidFull) vidFull.pause();
+        if(vidGrouped) vidGrouped.pause();
+    }
+    
+    // 5. INITIALIZE LEVEL LOGIC
+    if (lvl === 1) { currentState = 'LEVEL1'; initLevel1();}
+    else if (lvl === 2) { currentState = 'LEVEL2'; initLevel2();}
+    else if (lvl === 3) { currentState = 'LEVEL3'; initLevel3(); }
+    else if (lvl === 4) { currentState = 'LEVEL4'; initLevel4(); }
+    else if (lvl === 5) { currentState = 'LEVEL5'; initLevel5(); }
+    else if (lvl === 6) { currentState = 'LEVEL6'; initLevel6(); }
+    else if (lvl === 7) { currentState = 'LEVEL7'; initLevel7(); }
+}
+function triggerDialogue(lines, callback) {
+    if (dialogueBox.style.display === 'block') return; 
+    // currentState = 'DIALOGUE'; 
+    dialogueBox.style.display = 'block';
+
+    let lineIndex = 0;
+    const showLine = () => { 
+        let l = lines[lineIndex]; 
+        dialogueHeader.innerText = l.speaker; 
+        dialogueHeader.style.color = l.speaker === "SYSTEM" ? C_ACCENT : (l.speaker === "DEBUGGER" ? C_PLAYER : (l.speaker === "NEXUS-7" ? C_DANGER : '#fff')); 
+        dialogueText.innerText = l.text; 
+
+        // Update Sprite with Logic for "Box Visibility"
+        if (SPRITE_PATHS[l.speaker] && SPRITE_PATHS[l.speaker] !== "") {
+            portraitContainer.style.display = "block";
+            portraitImg.src = SPRITE_PATHS[l.speaker];
+            let shadowColor = l.speaker === "DEBUGGER" ? C_PLAYER : C_DANGER;
+            portraitImg.style.filter = `drop-shadow(0 0 10px ${shadowColor})`;
+        } else {
+            portraitContainer.style.display = "none";
+        }
+    };
+    showLine();
+    nextBtn.onclick = () => { lineIndex++; if (lineIndex < lines.length) showLine(); else { dialogueBox.style.display = 'none'; portraitContainer.style.display = 'none'; if (callback) callback(); } };
+}
+
+function drawStartScreen() {
+    // 1. Draw Background
+    let img = getImg("START_BG");
+    if (img) {
+        ctx.drawImage(img, 0, 0, 900, 650);
+        // Optional: Reduce this opacity (0.6 -> 0.3) if you want the image brighter
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; 
+        ctx.fillRect(0, 0, 900, 650);
+    } else {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, 900, 650);
+    }
+
+    // 2. Draw Title (Updated Position and Color)
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = '#ffffff'; // White glow
+    
+    // ARGS: Text, X, Y, Size, Color, Align, Font
+    // Changed Y to 120 (Top) and Color to '#ffffff' (White)
+    drawText("Tale of Laplace", 450, 120, 80, '#ffffff', 'center', 'Rajdhani');
+    
+    ctx.shadowBlur = 0;
+
+    // 3. Blinking "Click to Start"
+    if (Math.floor(Date.now() / 500) % 2 === 0) {
+        drawText("- CLICK TO START -", 450, 500, 24, C_SUCCESS, 'center');
+    }
+}
+
+function gameLoop() {
+    // --- DRAW BACKGROUND ---
+    ctx.fillStyle = C_BG; 
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // --- 2. DRAW BACKGROUND IMAGE ON TOP ---
+    if (currentLevelBg && SPRITE_PATHS[currentLevelBg]) {
+        let img = getImg(currentLevelBg);
+        // Check if image is fully loaded before trying to draw
+        if (img && img.complete && img.naturalWidth !== 0) {
+            ctx.drawImage(img, 0, 0, 900, 650);
+        }
+    }
+    
+    // --- STATE MACHINE ---
+    if (currentState === 'STARTSCREEN') { drawStartScreen(); }
+    else if (currentState === 'INTRO') { 
+        drawIntro(); 
+    }
+    else if (currentState === 'END_SEQUENCE') { 
+        drawEndSequence(); 
+    }
+    else if (currentState === 'WIN_SCREEN') {
+        drawWinScreen();
+    }
+    else if (currentState === 'PRELUDE') { 
+        drawPrelude(); 
+        playBGM("BGM_ACTION", 0.2);
+        if(frameCount === 10) {
+            // Updated to use the new transition helper!
+            triggerDialogue(STORY.prelude, () => {
+                 startLevelTransition(1, STORY.level1_intro);
+            });
+        }
+    }
+    else if (currentState === 'LEVEL1') { updateLevel1(); drawLevel1(); }
+    else if (currentState === 'LEVEL2') { updateLevel2(); drawLevel2(); }
+    else if (currentState === 'LEVEL3') { updateLevel3(); drawLevel3(); }
+    else if (currentState === 'LEVEL4') { updateLevel4(); drawLevel4(); }
+    else if (currentState === 'LEVEL5') { updateLevel5(); drawLevel5(); }
+    else if (currentState === 'LEVEL6') { updateLevel6(); drawLevel6();}
+    else if (currentState === 'LEVEL7') { updateLevel7(); drawLevel7(); }
+    else if (currentState === 'INTERLUDE') { drawInterlude(); }
+    
+    // TRANSITION STATE: We just keep drawing the background (handled at top of loop)
+    // and the dialogue box (handled by the HTML overlay). 
+    else if (currentState === 'TRANSITION') { 
+        // Optional: You could draw a "Loading..." text here if you wanted
+    }
+    
+    else if (currentState === 'DONE') { drawText("SYSTEM OPTIMIZED", 450, 325, 40, C_ACCENT); }
+    else if (currentState === 'DIALOGUE') {
+        if (currentIntroImage) drawIntro(); 
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+
+function startIntro() {
+    currentState = 'INTRO';
+    introIndex = 0;
+    document.getElementById('game-container').classList.add('intro-mode');
+    playNextIntroScene();
+}
+
+function playNextIntroScene() {
+    // Check if we have run out of scenes
+    if (introIndex >= INTRO_SCENES.length) {
+        // Cutscene Over -> Go to Prelude
+        currentState = 'PRELUDE'; 
+        return;
+    }
+
+    // Get current scene data
+    const scene = INTRO_SCENES[introIndex];
+    currentIntroImage = scene.img; // Set the background image
+
+    // Trigger the dialogue for this scene
+    // When dialogue ends (callback), increment index and run this function again
+    triggerDialogue(scene.dialogue, () => {
+        introIndex++;
+        // Slight delay for dramatic effect between slides
+        setTimeout(playNextIntroScene, 500); 
+    });
+}
+
+function drawIntro() {
+    // 1. Draw the Background Image Full Screen
+    if (currentIntroImage && SPRITE_PATHS[currentIntroImage]) {
+        let img = getImg(currentIntroImage);
+        if (img) {
+            // CHANGE: Draw image covering the WHOLE canvas (900x650)
+            // No squashing, no offsets.
+            ctx.drawImage(img, 0, 0, 900, 650); 
+        }
+    } else {
+        // Fallback if image missing
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, 900, 650);
+    }
+}
+
+function startEndSequence() {
+    // 1. Set State
+    currentState = 'END_SEQUENCE';
+    endIndex = 0;
+    
+    // 2. Clear any lingering game background images
+    currentLevelBg = null; 
+    
+    // 3. Enable "Cinematic Mode" (Hides HUD, moves dialogue box to bottom)
+    // document.getElementById('game-container').classList.add('intro-mode');
+    
+    // 5. Start Playing
+    playNextEndScene();
+}
+
+function playNextEndScene() {
+    if (endIndex === 0){
+            playBGM("BGM_WIN", 0.2);
+    }
+    if (endIndex === 1){
+            playBGM("BGM_LAB", 0.2);
+    }
+    // Check if we have run out of scenes
+    if (endIndex >= END_SCENES.length) {
+        // --- FINISHED ---
+        document.getElementById('game-container').classList.remove('intro-mode');
+        currentState = 'WIN_SCREEN'; 
+        return;
+    }
+
+    // Get current scene data
+    const scene = END_SCENES[endIndex];
+    currentEndImage = scene.img; 
+
+    // Trigger dialogue, increment index on callback
+    triggerDialogue(scene.dialogue, () => {
+        endIndex++;
+        setTimeout(playNextEndScene, 500); 
+    });
+}
+
+function drawEndSequence() {
+    // Identical logic to drawIntro: Full screen image
+    if (currentEndImage && SPRITE_PATHS[currentEndImage]) {
+        let img = getImg(currentEndImage);
+        if (img) {
+            ctx.drawImage(img, 0, 0, 900, 650); 
+        }
+    } else {
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, 900, 650);
+    }
+}
+
+function drawWinScreen() {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, 900, 650);
+
+    // Title
+    drawText("SYSTEM OPTIMIZATION COMPLETE", 450, 250, 40, C_SUCCESS);
+    
+    // Subtitle
+    ctx.font = "20px 'Share Tech Mono'";
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.fillText("Thank you for playing this Demo.", 450, 320);
+    ctx.fillText("Hopefully you learned something about how AI works.", 450, 350);
+
+    // Restart hint
+    if (frameCount % 60 < 40) {
+        ctx.fillStyle = C_DIM;
+        ctx.font = "14px 'Share Tech Mono'";
+        ctx.fillText("Refresh page to restart.", 450, 500);
+    }
+
+    playBGM("BGM_WIN", 0.2);
+}
+
+// Prelude
+function drawPrelude() {
+    document.getElementById('game-container').classList.remove('intro-mode');
+    frameCount++; let cx = 450, cy = 300; let r = 80 + Math.sin(frameCount * 0.1) * 10;
+    ctx.fillStyle = 'rgba(239, 68, 68, 0.1)'; ctx.beginPath(); ctx.arc(cx, cy, r + 50, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = C_DANGER; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
+    drawText("NEXUS-7 CRITICAL ERROR", cx, cy + 150, 30, C_DANGER, 'center', 'Share Tech Mono');
+}
+
+// --- INTERLUDE: LAGGING ROBOT ---
+function drawInterlude() {
+    frameCount++;
+    const IMAGE_DURATION = 180; // 3 seconds
+
+    if (frameCount < IMAGE_DURATION) {
+        // --- PHASE 1: SHOW IMAGE ---
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, 900, 650);
+        
+        // CHANGE: Use variable instead of hardcoded string
+        let img = getImg(currentInterludeImage);
+        if (img) {
+            ctx.drawImage(img, 0, 0, 900, 650);
+        }
+    } else {
+        // --- PHASE 2: SHOW ROBOT (Music Returns) ---
+        
+        // RESTART MUSIC (Only once)
+        if (frameCount === IMAGE_DURATION + 1) {
+            if (!interludeMusicImmediate) {
+                playBGM(nextInterludeMusic, 0.2); 
+            }
+        }
+
+        let robotFrame = frameCount - IMAGE_DURATION;
+
+        // Clear background
+        ctx.fillStyle = '#0f172a'; 
+        ctx.fillRect(0, 0, 900, 650);
+
+        let cx = 450, cy = 300;
+        
+        // Robot Face
+        ctx.fillStyle = C_ACCENT;
+        ctx.fillRect(cx - 50, cy - 50, 100, 100);
+        
+        // Eyes (Blinking slowly) using robotFrame
+        if (robotFrame % 60 < 40) {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(cx - 30, cy - 20, 20, 10);
+            ctx.fillRect(cx + 10, cy - 20, 20, 10);
+        }
+
+        // Loading Bar
+        ctx.strokeStyle = C_TEXT;
+        ctx.strokeRect(cx - 100, cy + 80, 200, 20);
+        
+        // Slow fill using robotFrame
+        let fill = (robotFrame % 300) / 300 * 200;
+        ctx.fillStyle = C_PLAYER;
+        ctx.fillRect(cx - 98, cy + 82, fill, 16);
+
+        drawText("PROCESSING...", cx, cy + 70, 14, C_DIM);
+        drawText("You venture deeper into the robot's mind...", cx, cy + 120, 20, C_DANGER);
+    }
+}
+
+function startInterludeTransition(imageKey, nextLevel, nextDialogue, musicKey = "BGM_ACTION", immediate = false) {
+    currentState = 'INTERLUDE';
+    currentInterludeImage = imageKey;
+    frameCount = 0;
+    
+    // Store settings for drawInterlude to use
+    nextInterludeMusic = musicKey;
+    interludeMusicImmediate = immediate;
+
+    if (immediate) {
+        // Play immediately (For Level 6 Boss Intro)
+        playBGM(musicKey, 0.4); 
+    } else {
+        // Silence (For standard spooky interludes)
+        stopBGM(); 
+    }
+    
+    // Duration: 8 seconds total
+    setTimeout(() => {
+        startLevelTransition(nextLevel, nextDialogue);
+    }, 8000);
+}
+
+// 1. Set initial state
+currentState = 'STARTSCREEN';
+
+// 2. Setup UI: Enable Intro Mode (Hides HUD) AND Force Hide Dialogue
+document.getElementById('game-container').classList.add('intro-mode');
+document.getElementById('dialogue').style.display = 'none'; // <--- THIS REMOVES THE PANE & BUTTON
+document.getElementById('kv-controls').style.display = 'none';
+
+// 3. Single Click Listener to Start
+canvas.addEventListener('mousedown', function onStartClick() {
+    if (currentState === 'STARTSCREEN') {
+        canvas.removeEventListener('mousedown', onStartClick);
+        
+        // Unlock Audio
+        unlockAudio(); 
+        playBGM("BGM_AMBIENCE", 0.6); 
+        
+        // Jump to Intro
+        startIntro(); 
+    }
+});
+
+// 4. Start the Loop
+gameLoop();
+
+</script>
+</body>
+</html>
