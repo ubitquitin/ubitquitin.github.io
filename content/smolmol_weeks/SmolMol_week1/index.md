@@ -33,7 +33,7 @@ RDKit is a python library that is like a swiss army knife for cheminformatics. I
 
 RDKit has a "Descriptors" set which is a set of hand-engineered numerical features extracted from a molecule. RDKit currently has 200+ descriptors, which include information about size, shape, polarity, topology and electronic properties. I learned about some of these features, which can be used as input features to a machine learning pipeline.
 
-<img src="featurizer.png" alt="Alt text" width="250" />
+<img src="featurizer.png" alt="Alt text" width="100" />
 
 ## Lipinski's rule of 5
 
@@ -65,7 +65,7 @@ Basically it takes raw scientific data (and has many datasets of this) and runs 
 
 I started reading an online cheminformatics textbook and learned about computer-aided drug discovery and design. Virtual screening is a computational technique used in drug discovery to prioritize the compound selection from a large compound library for subsequent experimental assays. It is a cost-effective and high-throughput method for drug screening. I imagine most companies are doing this for drug discovery.
 
-<img src="structure_vs_ligand.png" alt="Alt text" width="300" />
+<img src="structure_vs_ligand.png" alt="Alt text" width="400" />
 
 ## Structural-based approaches
 
@@ -73,7 +73,7 @@ The first type of virtual screening needs 3D structural information of the targe
 
 Docking algorithms can be rigid (treating the molecuels as rigid bodies), or flexible (where the ligand can be altered to a nearby lower-energy state). Systematic methods incorporate ligand flexibility by gradually changing structural properties such as torsional angles, deggrees of freedom, etc. Stochastic methods make random changes to the ligand structure, generating an ensemble of ligand-protein interactions to find a low energy conformation. Genetic algorithms, which are a type of search algorithm, can also be used.
 
-<img src="receptor_ligand_pic.png" alt="Alt text" width="300" />
+<img src="receptor_ligand_pic.png" alt="Alt text" width="400" />
 
 Scoring functions can be force-field based, meaning that the docking is evaluated by experiminetal data and quantum mechamical calculations. There are common algorithms used with this methodology such as DOCK and AMBER. There are also empirical scoring functions, which express the binding energy of a protein-ligand complex as the sum of experimentally derived terms. Consensus-scoring functions are often used, which use multiple scoring approaches together.
 
@@ -112,15 +112,15 @@ The first two I talked about above, being one hot encoded molecular feature dict
 
 So with the tox21 molecules featurized in 3 different ways, I used deepchem to load the molecules with 2 types of train-test splits, random, and scaffolded, which separates molecules such that those with the same molecular backbone end up in the same training set. This ensures no leakage of largely similar structures across sets, artificially boosting performance. With these 6 train-test sets, I trained a LightGBM model (a tree based method that aims to maximize information when trying to classify) on the RDKit descriptors and Morgan Fingerprints, and a GNN on the GraphConv features. I measured training AUC classification metrics across the 12 subtasks of the tox21 dataset,
 
-<img src="rocauc_12_task.png" alt="Alt text" width="300" />
+<img src="rocauc_12_task.png" alt="Alt text" width="500" />
 
 and compared the classification accuracy between the 3 different models.
 
-<img src="average_model_perf.png" alt="Alt text" width="300" />
+<img src="average_model_perf.png" alt="Alt text" width="500" />
 
 I used UMAP to project the featurized representations of the molecules into 2D space, and used marimo to plot scatterplots of the training and testing splits for random and scaffolded splits.
 
-<img src="scaff_rand_scatters.png" alt="Alt text" width="500" />
+<img src="scaff_rand_scatters.png" alt="Alt text" width="600" />
 
 There was significantly less overlap, as expected, in the latent space of the scaffolded split as opposed to the random split. This means that there was likely less train/test split and models trained on scaffolded splits could likely generalize to new molecules better.
 
@@ -130,13 +130,13 @@ I also looked at false positives and false negatives for the LightGBM classifier
 
 This showed a large class impalance. There were way more negative molecules than positive ones, and the model actually missed more of the positive ones (false negative) than it correctly identified (poor recall). I grabbed the logits from the LightGBM's prediction probabilities (how confident it was in it's classification) and plotted the confidence of the false positives and negatives.
 
-<img src="fp_fn_conf.png" alt="Alt text" width="250" />
+<img src="fp_fn_conf.png" alt="Alt text" width="500" />
 
 Overall the confidence was much higher for the false positives, indicating that the model would boldly claim something was toxic when it was not, but was quite unsure when it came to a molecule that was toxic, but it still decided to mark it safe. This means that the recall could likely be improved with a small adjustment to confidence threshold for the classifier. In other words, if we enforce that the classifier needs to be very sure before calling something safe, it would then classify those low confidence molecules as toxic after all, though this would result in more false positives as well.
 
 Lastly I looked at where the false positives and negatives showed up in the latent space, and printed some examples of them.
 
-<img src="fp_fn_scatter.png" alt="Alt text" width="500" />
+<img src="fp_fn_scatter.png" alt="Alt text" width="600" />
 
 Overall I found that the featurization and model type for this task was marginally important. The Scaffold split was necessary over random split to prevent data leakage.
 
