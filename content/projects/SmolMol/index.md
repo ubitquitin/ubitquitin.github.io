@@ -10,7 +10,7 @@ showTableOfContents = true
 +++
 I want to pursue Machine Learning and Artificial Intelligence in applications that benefit the world, and are rooted in scientific discovery. To this end, I am interested in bioinformatic/cheminformatic applications of AI/ML. Having no formal industry experience, this is my self-study journey to cover key concepts and gain relevant experience. My end goal is to be contextually aware of SOTA in these fields, and be able to contribute meaningfully.
 
-Week 1: [Molecular featurization & ADMET property prediction with RdKit + DeepChem]({{< ref "smolmol_weeks/SmolMol_week1/week1.md" >}})
+Week 1: [Molecular featurization & ADMET property prediction with RdKit + DeepChem]({{< ref "smolmol_weeks/SmolMol_week1/index.md" >}})
 
 Week 2: coming soon.
 
