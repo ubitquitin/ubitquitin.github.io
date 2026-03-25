@@ -1,5 +1,5 @@
 ---
-title: "Week 1"
+title: "Week 1 - Molecular featurization & ADMET property prediction with RdKit + DeepChem"
 date: 2026-03-23
 draft: false
 ---
